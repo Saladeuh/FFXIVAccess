@@ -37,6 +37,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Dalamud.ContextMenu" Version="1.2.2" />
     <PackageReference Include="DalamudPackager" Version="2.1.10" />
     <Reference Include="FFXIVClientStructs">
       <HintPath>$(DalamudLibPath)FFXIVClientStructs.dll</HintPath>
@@ -65,6 +66,9 @@
     <Reference Include="Lumina.Excel">
       <HintPath>$(DalamudLibPath)Lumina.Excel.dll</HintPath>
       <Private>false</Private>
+    </Reference>
+    <Reference Include="TolkDotNet">
+      <HintPath>bin\x64\Debug\TolkDotNet.dll</HintPath>
     </Reference>
   </ItemGroup>
 
