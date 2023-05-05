@@ -1,0 +1,12 @@
+{
+  "Author": "Salad1uh",
+  "Name": "FFXIVAccess",
+  "Punchline": "Improve game for visually impaired people.",
+  "Description": "Goal: Screenreader support for gui, help to travel in the world etc",
+  "InternalName": "FFXIVAccess",
+  "ApplicableVersion": "any",
+    "Tags": [
+        "blind",
+        "screenreader",
+    ]
+}
