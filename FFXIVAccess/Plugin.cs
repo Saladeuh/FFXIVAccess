@@ -61,7 +61,7 @@ namespace FFXIVAccess
         {
             Tolk.Load();
             var sr = Tolk.DetectScreenReader();
-            var test=Tolk.Output(sr);
+            Tolk.Output(sr);
             PluginInterface = pluginInterface;
             CommandManager = commandManager;
             this.titleScreenMenu = titleScreenMenu;
