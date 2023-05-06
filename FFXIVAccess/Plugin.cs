@@ -30,7 +30,8 @@ namespace FFXIVAccess
 {
     public sealed class Plugin : IDalamudPlugin
     {
-        public string Name => "Sample Plugin";
+        public string Name => "FFXIVAccess";
+        public string Version => "0.0.0";
         private const string CommandName = "/pmycommand";
         private Lumina.Excel.ExcelSheet<Item> listItems;
         private DalamudPluginInterface PluginInterface { get; init; }
@@ -59,9 +60,8 @@ namespace FFXIVAccess
             DataManager dataManager
             )
         {
-            Tolk.Load();
-            var sr = Tolk.DetectScreenReader();
-            Tolk.Output(sr);
+           ScreenReader.Load(this.Name, this.Version);
+            Tolk.Output("Screen Reader ready");
             PluginInterface = pluginInterface;
             CommandManager = commandManager;
             this.titleScreenMenu = titleScreenMenu;

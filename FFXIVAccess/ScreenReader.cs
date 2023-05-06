@@ -1,4 +1,3 @@
-// Not used at the moment
 using DavyKager;
 using System;
 using System.IO;
@@ -18,16 +17,16 @@ namespace FFXIVAccess
             return success;
         }
 
-        internal static void Load()
+        internal static void Load(string name, string version)
         {
             // Append accessibility deps (e.g. Tolk, NVDA drivers, etc.) to PATH
             var path = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
-            var accessibilityAssembliesDir = Path.Combine(Directory.GetCurrentDirectory(), "Accessibility");
+            var accessibilityAssembliesDir = Path.Combine("%appdata%", "XIVLauncher", "installedPlugins", name, version);
             path += $";{accessibilityAssembliesDir}";
             Environment.SetEnvironmentVariable("PATH", path, EnvironmentVariableTarget.Process);
 
             // Load Tolk
-            Tolk.TrySAPI(true);
+            //Tolk.TrySAPI(true);
             Tolk.Load();
         }
 
