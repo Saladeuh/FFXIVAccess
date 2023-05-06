@@ -1,0 +1,322 @@
+SystemMenu
+TelepotTown
+Journal
+Character
+MonsterNote
+AreaMap
+SelectString 
+WorldTravelSelect
+
+{ Search }
+> Depth Layer 1 C:4  12F2EA71620
+    _PopUpText
+    _TargetCursor
+    ScreenLog
+    _FlyText
+> Depth Layer 2 C:2  12F2EA71E30
+    _MiniTalk
+    NamePlate
+> Depth Layer 3 C:0  12F2EA72640
+> Depth Layer 4 C:1  12F2EA72E50
+    FadeBack
+> Depth Layer 5 C:79  12F2EA73660
+    _TargetInfo
+    OperationGuide
+    ChatLogPanel_2
+    ChatLogPanel_1
+    ChatLogPanel_0
+    ChatLog
+    _DTR
+    _NotificationFriend
+    _CastBar
+    InventoryGridCrystal
+    InventoryGrid
+    Inventory
+    AreaMap
+    JobHudBLM
+    ScenarioTree
+    InventoryCrystalGrid
+    InventoryEventGrid0E
+    InventoryEventGrid1E
+    InventoryEventGrid2E
+    InventoryGrid0E
+    InventoryGrid1E
+    InventoryGrid2E
+    InventoryGrid3E
+    InventoryExpansion
+    InventoryCrystalGrid
+    InventoryEventGrid2
+    InventoryEventGrid1
+    InventoryEventGrid0
+    InventoryGrid0
+    InventoryGrid1
+    InventoryLarge
+    _ActionCross
+    _ActionBar09
+    _ActionBar08
+    _ActionBar07
+    _ActionBar05
+    _ActionBar04
+    _ActionBar03
+    _ActionBar02
+    _AllianceList2
+    _AllianceList1
+    _ActionDoubleCrossR
+    _ActionDoubleCrossL
+    _ActionContents
+    _ActionBarEx
+    _ActionBar06
+    _ActionBar01
+    _ActionBar
+    QuestRedoHud
+    JobHudBLM0
+    _LimitBreak
+    _FocusTargetInfo
+    _ContentGauge
+    _EnemyList
+    _BagWidget
+    _BattleTalk
+    _ToDoList
+    _PartyList
+    _TargetInfoMainTarget
+    _TargetInfoBuffDebuff
+    _Exp
+    _StatusCustom3
+    _StatusCustom2
+    _StatusCustom1
+    _StatusCustom0
+    _Status
+    _ParameterWidget
+    _MainCommand
+    _Money
+    AddonContextSub
+    AddonContextMenuTitle
+    ContextIconMenu
+    ContextMenu
+    _NaviMap
+    _TargetCursorGround
+    _TargetInfoCastBar
+    _MainCross
+    _Notification
+    Hud
+> Depth Layer 6 C:12  12F2EA73E70
+    Tooltip
+    ItemDetail
+    _AreaText
+    _TextClassChange
+    _TextChain
+    ActionDetail
+    MiragePrismPrismItemDetail
+    _Image3
+    _PoisonText
+    _WideText
+    _Image
+    _ScreenInfoBack
+> Depth Layer 7 C:1  12F2EA74680
+    DragDropS
+> Depth Layer 8 C:1  12F2EA74E90
+    Talk
+> Depth Layer 9 C:1  12F2EA756A0
+    ScreenFrameSystem
+> Depth Layer 10 C:2  12F2EA75EB0
+    Filter
+    FadeMiddle
+> Depth Layer 11 C:11  12F2EA766C0
+    _LocationTitle
+    _LocationTitleShort
+    _AreaText
+    _Image3
+    _TextError
+    _PoisonText
+    _WideText
+    _ScreenText
+    _Image
+    LoadingTips
+    _ScreenInfoFront
+> Depth Layer 12 C:1  12F2EA76ED0
+    FilterSystem
+> Depth Layer 13 C:3  12F2EA776E0
+    NowLoading
+    CursorAddon
+    CursorLocation
+>
+
+
+& Loaded Units C:118  12F2EA77EF0
+    FadeBack
+    FadeMiddle
+    NowLoading
+    Filter
+    ScreenFrameSystem
+    FilterSystem
+    ContextMenu
+    ContextIconMenu
+    AddonContextMenuTitle
+    AddonContextSub
+    Tooltip
+    CursorLocation
+    InventoryGrid
+    InventoryGridCrystal
+    Inventory
+    InventoryGrid1
+    InventoryGrid0
+    InventoryEventGrid0
+    InventoryEventGrid1
+    InventoryEventGrid2
+    InventoryCrystalGrid
+    InventoryLarge
+    InventoryGrid3E
+    InventoryGrid2E
+    InventoryGrid1E
+    InventoryGrid0E
+    InventoryEventGrid2E
+    InventoryEventGrid1E
+    InventoryEventGrid0E
+    InventoryCrystalGrid
+    InventoryExpansion
+    ChatLogPanel_0
+    ChatLogPanel_1
+    ChatLogPanel_2
+    ChatLog
+    Talk
+    AreaMap
+    NamePlate
+    ScreenLog
+    ItemDetail
+    MiragePrismPrismItemDetail
+    ActionDetail
+    DragDropS
+    LoadingTips
+    Hud
+    _Money
+    _MainCommand
+    _MainCross
+    _ParameterWidget
+    _Status
+    _StatusCustom0
+    _StatusCustom1
+    _StatusCustom2
+    _StatusCustom3
+    _Exp
+    _BagWidget
+    _TargetInfo
+    _TargetInfoBuffDebuff
+    _TargetInfoCastBar
+    _TargetInfoMainTarget
+    _TargetCursor
+    _TargetCursorGround
+    _ScreenInfoFront
+    _ScreenInfoBack
+    _Notification
+    _DTR
+    _CastBar
+    _NaviMap
+    _ActionBar
+    _ActionBar01
+    _ActionBar02
+    _ActionBar03
+    _ActionBar04
+    _ActionBar05
+    _ActionBar06
+    _ActionBar07
+    _ActionBar08
+    _ActionBar09
+    _ActionBarEx
+    _ActionCross
+    _ActionContents
+    _ActionDoubleCrossL
+    _ActionDoubleCrossR
+    _PartyList
+    _AllianceList1
+    _AllianceList2
+    _EnemyList
+    _ToDoList
+    _ContentGauge
+    _FocusTargetInfo
+    _BattleTalk
+    _LimitBreak
+    ScenarioTree
+    QuestRedoHud
+    _PopUpText
+    _FlyText
+    _MiniTalk
+    _AreaText
+    _Image
+    _LocationTitle
+    _LocationTitleShort
+    _ScreenText
+    _WideText
+    _PoisonText
+    _TextError
+    _Image3
+    _AreaText
+    _Image
+    _WideText
+    _PoisonText
+    _TextChain
+    _TextClassChange
+    _Image3
+    JobHudBLM
+    JobHudBLM0
+    _NotificationFriend
+    CursorAddon
+    OperationGuide
+> Focused Units C:0  12F2EA78700
+> Units 16 C:55  12F2EA78F10
+    CursorAddon
+    NamePlate
+    Hud
+    _Money
+    _MainCommand
+    _ParameterWidget
+    _StatusCustom0
+    _StatusCustom1
+    _StatusCustom2
+    _Exp
+    _BagWidget
+    _Notification
+    _DTR
+    _NaviMap
+    _ActionBar
+    _ActionBar01
+    _ActionBar06
+    _ActionBarEx
+    _ActionContents
+    _ActionDoubleCrossL
+    _ActionDoubleCrossR
+    _AllianceList1
+    _AllianceList2
+    _ToDoList
+    _ContentGauge
+    _LimitBreak
+    ScenarioTree
+    QuestRedoHud
+    ChatLog
+    _PopUpText
+    _FlyText
+    _MiniTalk
+    _AreaText
+    _Image
+    _LocationTitle
+    _LocationTitleShort
+    _ScreenText
+    _WideText
+    _PoisonText
+    _TextError
+    _Image3
+    _AreaText
+    _Image
+    _WideText
+    _PoisonText
+    _TextChain
+    _TextClassChange
+    _Image3
+    ChatLogPanel_0
+    ChatLogPanel_1
+    ChatLogPanel_2
+    JobHudBLM
+    JobHudBLM0
+    ScreenLog
+    _NotificationFriend
+> Units 17 C:0  12F2EA79720
+> Units 18 C:0  12F2EA79F30

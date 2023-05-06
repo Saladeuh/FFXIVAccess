@@ -25,6 +25,10 @@ using FFXIVClientStructs.FFXIV.Component.Excel;
 using Lumina.Data.Parsing;
 using Dalamud.Game.Gui.Toast;
 using FFXIVAccess.Windows;
+using Dalamud.Game.Text;
+using System.Linq;
+using Dalamud.Utility;
+using System.Text;
 
 namespace FFXIVAccess
 {
@@ -34,6 +38,7 @@ namespace FFXIVAccess
     public string Version => "0.0.0";
     private const string CommandName = "/pmycommand";
     private Lumina.Excel.ExcelSheet<Item> listItems;
+    private Lumina.Excel.ExcelSheet<Addon> listAddon;
     private DalamudPluginInterface PluginInterface { get; init; }
     private CommandManager CommandManager { get; init; }
     private DataManager dataManager { get; init; }
@@ -48,10 +53,13 @@ namespace FFXIVAccess
 
     private ConfigWindow ConfigWindow { get; init; }
     private MainWindow MainWindow { get; init; }
+    public event Action<nint> AddonEvent;
 
     public Plugin(
       [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
+      ChatGui chat,
       [RequiredVersion("1.0")] CommandManager commandManager,
+      Framework framework,
       FlyTextGui flyTextGui,
       GameGui gameGui,
       ToastGui toastGui,
@@ -71,16 +79,20 @@ namespace FFXIVAccess
       Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
       Configuration.Initialize(PluginInterface);
       this.dataManager = dataManager;
+      //chat.ChatMessage += onChat;
       listItems = dataManager.GetExcelSheet<Item>();
+      listAddon = dataManager.GetExcelSheet<Addon>();
       var contextMenu = new DalamudContextMenu();
       contextMenu.OnOpenGameObjectContextMenu += OpenGameObjectContextMenu;
       contextMenu.OnOpenInventoryContextMenu += OpenInventory;
+      framework.Update += OnFrameworkUpdate;
       flyTextGui.FlyTextCreated += onFlyTextCreated;
       gameGui.HoveredActionChanged += onHoveredActionChanged;
       gameGui.HoveredItemChanged += onHoveredItemChange;
       toastGui.Toast += onToast;
       toastGui.ErrorToast += onErrorToast;
       toastGui.QuestToast += onQuestToast;
+      AddonEvent += onSystemMenu;
       ConfigWindow = new ConfigWindow(this);
       CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
       {
@@ -91,40 +103,76 @@ namespace FFXIVAccess
       PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
     }
 
+    private void onSystemMenu(nint obj)
+    {
+      ScreenReader.Output("Menu système");
+    }
+
+    private nint _lastAddon = nint.Zero;
+    public void OnFrameworkUpdate(Framework _)
+    {
+      var addon = gameGui.GetAddonByName("SystemMenu");
+      if (_lastAddon == nint.Zero && addon != nint.Zero)
+        AddonEvent.Invoke(addon);
+      _lastAddon = addon;
+    }
+    /*
+  private void onChat(XivChatType type, uint senderId, ref SeString sender, ref SeString message, ref bool isHandled)
+  {
+    string senderText = sender.TextValue;
+    string messageText = message.TextValue;
+    string typeText= type.ToString();
+    if (senderText.Substring(1).All(char.IsDigit))
+    {
+      senderText= string.Empty;
+    }
+    if (typeText.IsNullOrEmpty())
+    {
+      ScreenReader.Output(message.TextValue);
+    }
+    else if (type == XivChatType.Echo)
+    {
+      ScreenReader.Output($"{sender.TextValue}: {message.TextValue}");
+    } else
+    {
+      ScreenReader.Output($"{sender.TextValue} {type} : {message.TextValue}");
+    }
+  }
+      */
     private void onQuestToast(ref SeString message, ref QuestToastOptions options, ref bool isHandled)
     {
-      Chat.Print(message);
+      ScreenReader.Output(message.TextValue);
     }
 
     private void onErrorToast(ref SeString message, ref bool isHandled)
     {
-      Chat.Print(message);
+      ScreenReader.Output(message.TextValue);
     }
 
     private void onToast(ref SeString message, ref ToastOptions options, ref bool isHandled)
     {
-      Chat.Print(message);
+      ScreenReader.Output(message.TextValue);
     }
 
     private void OpenInventory(InventoryContextMenuOpenArgs args)
     {
-      Chat.Print($"inv {args.ItemAmount.ToString()}");
+      ScreenReader.Output($"inv {args.ItemAmount.ToString()}");
     }
 
     private void OpenGameObjectContextMenu(GameObjectContextMenuOpenArgs args)
     {
-      Chat.Print($"t {args.ParentAddonName}: {args.Text}");
+      ScreenReader.Output($"t {args.ParentAddonName}: {args.Text}");
     }
 
     private void onHoveredItemChange(object? sender, ulong e)
     {
       var name = listItems.GetRow((uint)e).Name;
       var desc = listItems.GetRow((uint)e).Description;
-      Chat.Print($"{name}: {desc}");
+      ScreenReader.Output($"{name}: {desc}");
     }
     private void onHoveredActionChanged(object? sender, HoveredAction e)
     {
-      Chat.Print(e.ActionKind.ToString());
+      ScreenReader.Output(e.ActionKind.ToString());
     }
 
     public void Dispose()
@@ -139,23 +187,22 @@ namespace FFXIVAccess
 
     private void OnCommand(string command, string args)
     {
-      Chat.Print("lezzzgo"); Tolk.Output("wwwwé");
+      Tolk.Output("wwwaaaaaaaa");
       /*
       foreach (TitleScreenMenuEntry e in titleScreenMenu.Entries)
       {
-        Chat.Print(e.Name);
+        ScreenReader.Output(e.Name);
       }
-      
+
       foreach (var o in gameObjects)
       {
-          Chat.Print(o.Name);
+          ScreenReader.Output(o.Name);
       }
       */
-      Chat.Print(Directory.GetCurrentDirectory());
-    }
+      }
     private void onFlyTextCreated(ref FlyTextKind kind, ref int val1, ref int val2, ref SeString text1, ref SeString text2, ref uint color, ref uint icon, ref uint damageTypeIcon, ref float yOffset, ref bool handled)
     {
-      Chat.Print($"{text1},{text2}");
+      ScreenReader.Output($"{text1},{text2}");
     }
     private void DrawUI()
     {

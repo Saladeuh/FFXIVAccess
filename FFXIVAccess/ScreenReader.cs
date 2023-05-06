@@ -26,7 +26,7 @@ namespace FFXIVAccess
       Environment.SetEnvironmentVariable("PATH", path, EnvironmentVariableTarget.Process);
 
       // Load Tolk
-      //Tolk.TrySAPI(true);
+      Tolk.TrySAPI(true);
       Tolk.Load();
     }
 
