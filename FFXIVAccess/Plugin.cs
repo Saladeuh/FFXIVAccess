@@ -29,6 +29,7 @@ using Dalamud.Game.Text;
 using System.Linq;
 using Dalamud.Utility;
 using System.Text;
+using Newtonsoft.Json.Linq;
 
 namespace FFXIVAccess
 {
@@ -45,6 +46,7 @@ namespace FFXIVAccess
     private FlyTextGui flyTextGui { get; init; }
     private ObjectTable gameObjects { get; init; }
     public GameGui gameGui { get; private set; }
+    public SeStringManager seStringManager { get; private set; }
     private TitleScreenMenu titleScreenMenu { get; set; }
     private ToastGui toastGui { get; set; }
     public Configuration Configuration { get; init; }
@@ -62,6 +64,7 @@ namespace FFXIVAccess
       Framework framework,
       FlyTextGui flyTextGui,
       GameGui gameGui,
+      SeStringManager seStringManager,
       ToastGui toastGui,
       TitleScreenMenu titleScreenMenu,
       ObjectTable gameObjects,
@@ -75,6 +78,7 @@ namespace FFXIVAccess
       this.titleScreenMenu = titleScreenMenu;
       this.gameObjects = gameObjects;
       this.gameGui = gameGui;
+      this.seStringManager= seStringManager;
       this.toastGui = toastGui;
       Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
       Configuration.Initialize(PluginInterface);
@@ -92,7 +96,7 @@ namespace FFXIVAccess
       toastGui.Toast += onToast;
       toastGui.ErrorToast += onErrorToast;
       toastGui.QuestToast += onQuestToast;
-      AddonEvent += onSystemMenu;
+      AddonEvent += onSelectString;
       ConfigWindow = new ConfigWindow(this);
       CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
       {
@@ -103,15 +107,28 @@ namespace FFXIVAccess
       PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
     }
 
-    private void onSystemMenu(nint obj)
+    private unsafe void onSelectString(nint obj)
     {
-      ScreenReader.Output("Menu système");
+      var text = "";
+      var addon=Dalamud.SafeMemory.PtrToStructure<FFXIVClientStructs.FFXIV.Client.UI.AddonSelectString>(obj);
+      var values = addon.Value.AtkUnitBase.AtkValues;
+      for(int i=0; i<10; i++)
+      {
+        if (values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String8 || values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.AllocatedString || values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String)
+        {
+          //var str = Dalamud.SafeMemory.PtrToStructure<FFXIVClientStructs.STD.StdString>(values[i].Int);
+          text = SeString.Parse(values[i].String, 64).TextValue;
+          ScreenReader.Output($"{values[i].Type.ToString()}: {text}");
+        }
+      }
+      //ScreenReader.Output($"ta {text}");
+      //throw new NotImplementedException();
     }
 
     private nint _lastAddon = nint.Zero;
     public void OnFrameworkUpdate(Framework _)
     {
-      var addon = gameGui.GetAddonByName("SystemMenu");
+      var addon = gameGui.GetAddonByName("SelectString");
       if (_lastAddon == nint.Zero && addon != nint.Zero)
         AddonEvent.Invoke(addon);
       _lastAddon = addon;
