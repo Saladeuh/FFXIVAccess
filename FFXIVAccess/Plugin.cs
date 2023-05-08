@@ -30,6 +30,8 @@ using System.Linq;
 using Dalamud.Utility;
 using System.Text;
 using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
+using FFXIVClientStructs.FFXIV.Client.UI;
 
 namespace FFXIVAccess
 {
@@ -40,6 +42,13 @@ namespace FFXIVAccess
     private const string CommandName = "/pmycommand";
     private Lumina.Excel.ExcelSheet<Item> listItems;
     private Lumina.Excel.ExcelSheet<Addon> listAddon;
+    public static readonly Dictionary<string, Type> addonDict = new Dictionary<string, Type>
+    {
+    { "SelectString", typeof(AddonSelectString) },
+    { "Character", typeof(AddonCharacterInspect) },
+      { "TelepotTown", typeof(AddonTeleport) },
+      {"SystemMenu", typeof(AddonSelectString) }
+    };
     private DalamudPluginInterface PluginInterface { get; init; }
     private CommandManager CommandManager { get; init; }
     private DataManager dataManager { get; init; }
@@ -55,7 +64,7 @@ namespace FFXIVAccess
 
     private ConfigWindow ConfigWindow { get; init; }
     private MainWindow MainWindow { get; init; }
-    public event Action<nint> AddonEvent;
+    public event Action<nint, string> AddonEvent;
 
     public Plugin(
       [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
@@ -78,11 +87,10 @@ namespace FFXIVAccess
       this.titleScreenMenu = titleScreenMenu;
       this.gameObjects = gameObjects;
       this.gameGui = gameGui;
-      this.seStringManager= seStringManager;
+      this.seStringManager = seStringManager;
       this.toastGui = toastGui;
       Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
       Configuration.Initialize(PluginInterface);
-      this.dataManager = dataManager;
       //chat.ChatMessage += onChat;
       listItems = dataManager.GetExcelSheet<Item>();
       listAddon = dataManager.GetExcelSheet<Addon>();
@@ -107,31 +115,39 @@ namespace FFXIVAccess
       PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
     }
 
-    private unsafe void onSelectString(nint obj)
+    private unsafe void onSelectString(nint obj, string name)
     {
-      var text = "";
-      var addon=Dalamud.SafeMemory.PtrToStructure<FFXIVClientStructs.FFXIV.Client.UI.AddonSelectString>(obj);
-      var values = addon.Value.AtkUnitBase.AtkValues;
-      for(int i=0; i<10; i++)
+      ScreenReader.Output(name);
+      var addon = Dalamud.SafeMemory.PtrToStructure<FFXIVClientStructs.FFXIV.Client.UI.AddonSelectString>(obj);
+      if (addon != null)
       {
-        if (values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String8 || values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.AllocatedString || values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String)
+        var values = addon.Value.AtkUnitBase.AtkValues;
+        for (int i = 0; i < 10; i++)
         {
-          //var str = Dalamud.SafeMemory.PtrToStructure<FFXIVClientStructs.STD.StdString>(values[i].Int);
-          text = SeString.Parse(values[i].String, 64).TextValue;
-          ScreenReader.Output($"{values[i].Type.ToString()}: {text}");
+          if (values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String8 || values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.AllocatedString || values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String)
+          {
+            var text = Dalamud.Memory.MemoryHelper.ReadSeStringNullTerminated((IntPtr)values[i].String).TextValue;
+            //text = SeString.Parse(values[i].String, 64).TextValue;
+            ScreenReader.Output($"{text}");
+          }
         }
       }
-      //ScreenReader.Output($"ta {text}");
-      //throw new NotImplementedException();
     }
 
     private nint _lastAddon = nint.Zero;
     public void OnFrameworkUpdate(Framework _)
     {
-      var addon = gameGui.GetAddonByName("SelectString");
-      if (_lastAddon == nint.Zero && addon != nint.Zero)
-        AddonEvent.Invoke(addon);
-      _lastAddon = addon;
+      nint addon = _lastAddon;
+      foreach (var entry in addonDict)
+      {
+        addon = gameGui.GetAddonByName(entry.Key);
+        if (addon != nint.Zero && _lastAddon != addon)
+        {
+          AddonEvent.Invoke(addon, entry.Key);
+          _lastAddon = addon;
+        }
+      }
+
     }
     /*
   private void onChat(XivChatType type, uint senderId, ref SeString sender, ref SeString message, ref bool isHandled)
@@ -216,7 +232,7 @@ namespace FFXIVAccess
           ScreenReader.Output(o.Name);
       }
       */
-      }
+    }
     private void onFlyTextCreated(ref FlyTextKind kind, ref int val1, ref int val2, ref SeString text1, ref SeString text2, ref uint color, ref uint icon, ref uint damageTypeIcon, ref float yOffset, ref bool handled)
     {
       ScreenReader.Output($"{text1},{text2}");
