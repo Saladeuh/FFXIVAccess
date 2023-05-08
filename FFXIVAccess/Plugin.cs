@@ -47,7 +47,17 @@ namespace FFXIVAccess
     { "SelectString", typeof(AddonSelectString) },
     { "Character", typeof(AddonCharacterInspect) },
       { "TelepotTown", typeof(AddonTeleport) },
-      {"SystemMenu", typeof(AddonSelectString) }
+      {"SystemMenu", typeof(AddonSelectString) },
+      {"Journal", typeof(AddonSelectString) },
+      {"MonsterNote", typeof(AddonSelectString) },
+      //{"AreaMap", typeof(AddonSelectString) },
+      {"WorldTravelSelect", typeof(AddonSelectString) },
+      //{ "ScreenFrameSystem", typeof(AddonSelectString) },
+      //{"ContextMenu", typeof(AddonSelectString) },
+      //{"AddonContextMenuTitle", typeof(AddonSelectString)},
+      { "Telepot", typeof(AddonTeleport) },
+      { "ParameterWidget", typeof(AddonSelectString) },
+      { "EnemyList", typeof(AddonSelectString) },
     };
     private DalamudPluginInterface PluginInterface { get; init; }
     private CommandManager CommandManager { get; init; }
