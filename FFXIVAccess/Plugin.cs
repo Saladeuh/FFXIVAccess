@@ -32,6 +32,8 @@ using System.Text;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using FFXIVClientStructs.FFXIV.Client.UI;
+using Dalamud.Game.ClientState.Keys;
+using FFXIVClientStructs.FFXIV.Common.Math;
 
 namespace FFXIVAccess
 {
@@ -63,6 +65,7 @@ namespace FFXIVAccess
     private CommandManager CommandManager { get; init; }
     private DataManager dataManager { get; init; }
     private FlyTextGui flyTextGui { get; init; }
+    public KeyState keyState { get; private set; }
     private ObjectTable gameObjects { get; init; }
     public GameGui gameGui { get; private set; }
     public SeStringManager seStringManager { get; private set; }
@@ -74,8 +77,8 @@ namespace FFXIVAccess
 
     private ConfigWindow ConfigWindow { get; init; }
     private MainWindow MainWindow { get; init; }
-    public event Action<nint, string> AddonEvent;
 
+    public event Action<nint, string> AddonEvent;
     public Plugin(
       [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
       ChatGui chat,
@@ -83,6 +86,7 @@ namespace FFXIVAccess
       Framework framework,
       FlyTextGui flyTextGui,
       GameGui gameGui,
+      KeyState keyState,
       SeStringManager seStringManager,
       ToastGui toastGui,
       TitleScreenMenu titleScreenMenu,
@@ -111,6 +115,7 @@ namespace FFXIVAccess
       flyTextGui.FlyTextCreated += onFlyTextCreated;
       gameGui.HoveredActionChanged += onHoveredActionChanged;
       gameGui.HoveredItemChanged += onHoveredItemChange;
+      this.keyState = keyState;
       toastGui.Toast += onToast;
       toastGui.ErrorToast += onErrorToast;
       toastGui.QuestToast += onQuestToast;
@@ -137,14 +142,15 @@ namespace FFXIVAccess
           if (values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String8 || values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.AllocatedString || values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String)
           {
             var text = Dalamud.Memory.MemoryHelper.ReadSeStringNullTerminated((IntPtr)values[i].String).TextValue;
-            //text = SeString.Parse(values[i].String, 64).TextValue;
-            ScreenReader.Output($"{text}");
+            ScreenReader.Output(text);
           }
         }
       }
     }
 
     private nint _lastAddon = nint.Zero;
+    private System.Numerics.Vector3 _lastPosition;
+    private bool _banging = false;
     public void OnFrameworkUpdate(Framework _)
     {
       nint addon = _lastAddon;
@@ -158,6 +164,20 @@ namespace FFXIVAccess
         }
       }
 
+      var position = gameObjects[0].Position;
+      if (position == _lastPosition && (keyState[VirtualKey.A] || keyState[VirtualKey.E] || keyState[VirtualKey.Z] || keyState[VirtualKey.S]))
+      {
+        if (_banging)
+        {
+          ScreenReader.Output("Mur!");
+        }
+        _banging = true;
+      }
+      else
+      {
+        _banging = false;
+      }
+      _lastPosition = position;
     }
     /*
   private void onChat(XivChatType type, uint senderId, ref SeString sender, ref SeString message, ref bool isHandled)
@@ -230,7 +250,8 @@ namespace FFXIVAccess
 
     private void OnCommand(string command, string args)
     {
-      Tolk.Output("wwwaaaaaaaa");
+      Tolk.Output($"{gameObjects[0].Name}: {gameObjects[0].Position.X}, {gameObjects[0].Position.Y} {gameObjects[0].Rotation}");
+
       /*
       foreach (TitleScreenMenuEntry e in titleScreenMenu.Entries)
       {
