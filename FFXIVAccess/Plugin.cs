@@ -1,50 +1,34 @@
-using Dalamud.Game.Command;
-using Dalamud.IoC;
-using Dalamud.Plugin;
-using System.IO;
-using Dalamud.Interface.Windowing;
+using System;
+using System.Collections.Generic;
+using Dalamud.ContextMenu;
+using Dalamud.Data;
 using Dalamud.Game;
-using DavyKager;
+using Dalamud.Game.ClientState.Keys;
+using Dalamud.Game.ClientState.Objects;
+using Dalamud.Game.Command;
 using Dalamud.Game.Gui;
 using Dalamud.Game.Gui.FlyText;
-using System.Reflection;
-using FFXIVClientStructs.FFXIV.Client.Game.Event;
-using Dalamud.Game.Text.SeStringHandling;
-using System;
-using FFXIVClientStructs.FFXIV.Client.UI.Agent;
-using Dalamud.Interface;
-using static Dalamud.Interface.TitleScreenMenu;
-using Dalamud.ContextMenu;
-using Dalamud.Game.ClientState.Objects.Types;
-using System.Runtime.Serialization;
-using FFXIVClientStructs.FFXIV.Client.Game.Object;
-using Dalamud.Game.ClientState.Objects;
-using Dalamud.Data;
-using Lumina.Excel.GeneratedSheets;
-using FFXIVClientStructs.FFXIV.Component.Excel;
-using Lumina.Data.Parsing;
 using Dalamud.Game.Gui.Toast;
+using Dalamud.Game.Text.SeStringHandling;
+using Dalamud.Interface;
+using Dalamud.Interface.Windowing;
+using Dalamud.IoC;
+using Dalamud.Plugin;
+using DavyKager;
 using FFXIVAccess.Windows;
-using Dalamud.Game.Text;
-using System.Linq;
-using Dalamud.Utility;
-using System.Text;
-using Newtonsoft.Json.Linq;
-using System.Collections.Generic;
 using FFXIVClientStructs.FFXIV.Client.UI;
-using Dalamud.Game.ClientState.Keys;
-using FFXIVClientStructs.FFXIV.Common.Math;
-using Lumina.Data.Parsing.Scd;
+using Lumina.Excel.GeneratedSheets;
 
 namespace FFXIVAccess
 {
-  public sealed class Plugin : IDalamudPlugin
+  public sealed partial class Plugin : IDalamudPlugin
   {
     public string Name => "FFXIVAccess";
     public string Version => "0.0.0";
     private const string CommandName = "/pmycommand";
-    private Lumina.Excel.ExcelSheet<Item> listItems;
-    private Lumina.Excel.ExcelSheet<Addon> listAddon;
+    private Lumina.Excel.ExcelSheet<Quest> questList;
+    private Lumina.Excel.ExcelSheet<Item> itemList;
+    private Lumina.Excel.ExcelSheet<Addon> addonList;
     public static readonly Dictionary<string, Type> addonDict = new Dictionary<string, Type>
     {
     { "SelectString", typeof(AddonSelectString) },
@@ -106,8 +90,9 @@ namespace FFXIVAccess
       Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
       Configuration.Initialize(PluginInterface);
       //chat.ChatMessage += onChat;
-      listItems = dataManager.GetExcelSheet<Item>();
-      listAddon = dataManager.GetExcelSheet<Addon>();
+      itemList = dataManager.GetExcelSheet<Item>();
+      questList = dataManager.GetExcelSheet<Quest>();
+      addonList = dataManager.GetExcelSheet<Addon>();
       var contextMenu = new DalamudContextMenu();
       contextMenu.OnOpenGameObjectContextMenu += OpenGameObjectContextMenu;
       contextMenu.OnOpenInventoryContextMenu += OpenInventory;
@@ -128,24 +113,6 @@ namespace FFXIVAccess
 
       PluginInterface.UiBuilder.Draw += DrawUI;
       PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
-    }
-
-    private unsafe void onSelectString(nint obj, string name)
-    {
-      ScreenReader.Output(name);
-      var addon = Dalamud.SafeMemory.PtrToStructure<FFXIVClientStructs.FFXIV.Client.UI.AddonSelectString>(obj);
-      if (addon != null)
-      {
-        var values = addon.Value.AtkUnitBase.AtkValues;
-        for (int i = 0; i < 10; i++)
-        {
-          if (values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String8 || values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.AllocatedString || values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String)
-          {
-            var text = Dalamud.Memory.MemoryHelper.ReadSeStringNullTerminated((IntPtr)values[i].String).TextValue;
-            ScreenReader.Output(text);
-          }
-        }
-      }
     }
 
     private nint _lastAddon = nint.Zero;
@@ -209,42 +176,6 @@ namespace FFXIVAccess
     }
   }
       */
-    private void onQuestToast(ref SeString message, ref QuestToastOptions options, ref bool isHandled)
-    {
-      ScreenReader.Output(message.TextValue);
-    }
-
-    private void onErrorToast(ref SeString message, ref bool isHandled)
-    {
-      ScreenReader.Output(message.TextValue);
-    }
-
-    private void onToast(ref SeString message, ref ToastOptions options, ref bool isHandled)
-    {
-      ScreenReader.Output(message.TextValue);
-    }
-
-    private void OpenInventory(InventoryContextMenuOpenArgs args)
-    {
-      ScreenReader.Output($"inv {args.ItemAmount.ToString()}");
-    }
-
-    private void OpenGameObjectContextMenu(GameObjectContextMenuOpenArgs args)
-    {
-      ScreenReader.Output($"t {args.ParentAddonName}: {args.Text}");
-    }
-
-    private void onHoveredItemChange(object? sender, ulong e)
-    {
-      var name = listItems.GetRow((uint)e).Name;
-      var desc = listItems.GetRow((uint)e).Description;
-      ScreenReader.Output($"{name}: {desc}");
-    }
-    private void onHoveredActionChanged(object? sender, HoveredAction e)
-    {
-      ScreenReader.Output(e.ActionKind.ToString());
-    }
-
     public void Dispose()
     {
       WindowSystem.RemoveAllWindows();
@@ -253,27 +184,9 @@ namespace FFXIVAccess
       MainWindow.Dispose();
 
       CommandManager.RemoveHandler(CommandName);
+      ScreenReader.Unload();
     }
 
-    private void OnCommand(string command, string args)    {
-      //Tolk.Output($"{gameObjects[0].Name}: {gameObjects[0].Position.X}, {gameObjects[0].Position.Y} {gameObjects[0].Rotation}");
-
-      /*
-      foreach (TitleScreenMenuEntry e in titleScreenMenu.Entries)
-      {
-        ScreenReader.Output(e.Name);
-      }
-
-      foreach (var o in gameObjects)
-      {
-          ScreenReader.Output(o.Name);
-      }
-      */
-    }
-    private void onFlyTextCreated(ref FlyTextKind kind, ref int val1, ref int val2, ref SeString text1, ref SeString text2, ref uint color, ref uint icon, ref uint damageTypeIcon, ref float yOffset, ref bool handled)
-    {
-      ScreenReader.Output($"{text1},{text2}");
-    }
     private void DrawUI()
     {
       WindowSystem.Draw();
