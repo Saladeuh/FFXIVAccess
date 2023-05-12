@@ -34,6 +34,7 @@ using System.Collections.Generic;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using Dalamud.Game.ClientState.Keys;
 using FFXIVClientStructs.FFXIV.Common.Math;
+using Lumina.Data.Parsing.Scd;
 
 namespace FFXIVAccess
 {
@@ -87,7 +88,6 @@ namespace FFXIVAccess
       FlyTextGui flyTextGui,
       GameGui gameGui,
       KeyState keyState,
-      SeStringManager seStringManager,
       ToastGui toastGui,
       TitleScreenMenu titleScreenMenu,
       ObjectTable gameObjects,
@@ -151,6 +151,7 @@ namespace FFXIVAccess
     private nint _lastAddon = nint.Zero;
     private System.Numerics.Vector3 _lastPosition;
     private bool _banging = false;
+    DateTime lastTime = DateTime.Now;
     public void OnFrameworkUpdate(Framework _)
     {
       nint addon = _lastAddon;
@@ -169,7 +170,13 @@ namespace FFXIVAccess
       {
         if (_banging)
         {
-          ScreenReader.Output("Mur!");
+          DateTime now = DateTime.Now;
+          if (now.Subtract(lastTime).TotalMilliseconds >= 650)
+          {
+            UIModule.PlayChatSoundEffect(16);
+            //ScreenReader.Output("Mur!");
+            lastTime = now;
+          }
         }
         _banging = true;
       }
@@ -248,9 +255,8 @@ namespace FFXIVAccess
       CommandManager.RemoveHandler(CommandName);
     }
 
-    private void OnCommand(string command, string args)
-    {
-      Tolk.Output($"{gameObjects[0].Name}: {gameObjects[0].Position.X}, {gameObjects[0].Position.Y} {gameObjects[0].Rotation}");
+    private void OnCommand(string command, string args)    {
+      //Tolk.Output($"{gameObjects[0].Name}: {gameObjects[0].Position.X}, {gameObjects[0].Position.Y} {gameObjects[0].Rotation}");
 
       /*
       foreach (TitleScreenMenuEntry e in titleScreenMenu.Entries)
