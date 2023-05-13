@@ -11,6 +11,7 @@ namespace FFXIVAccess
   {
     private unsafe void OnCommand(string command, string args)
     {
+      throw new NotImplementedException();
       /*
       var quests = QuestManager.Instance()->LeveQuests;
       var questArray = SafeMemory.PtrToStructure<QuestManager.QuestListArray>((nint)quests).Value;

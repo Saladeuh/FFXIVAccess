@@ -5,6 +5,7 @@ using Dalamud.Data;
 using Dalamud.Game;
 using Dalamud.Game.ClientState.Keys;
 using Dalamud.Game.ClientState.Objects;
+using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.Command;
 using Dalamud.Game.Gui;
 using Dalamud.Game.Gui.FlyText;
@@ -35,6 +36,7 @@ namespace FFXIVAccess
     private FlyTextGui flyTextGui { get; init; }
     public KeyState keyState { get; private set; }
     private ObjectTable gameObjects { get; init; }
+    public Dalamud.Game.ClientState.Objects.Types.Character? character { get; set; }
     public GameGui gameGui { get; private set; }
     public SeStringManager seStringManager { get; private set; }
     private TitleScreenMenu titleScreenMenu { get; set; }
@@ -67,6 +69,7 @@ namespace FFXIVAccess
       CommandManager = commandManager;
       this.titleScreenMenu = titleScreenMenu;
       this.gameObjects = gameObjects;
+      this.character = (Dalamud.Game.ClientState.Objects.Types.Character)gameObjects[0];
       this.gameGui = gameGui;
       this.seStringManager = seStringManager;
       this.toastGui = toastGui;
@@ -98,42 +101,57 @@ namespace FFXIVAccess
       PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
     }
 
-    private nint _lastAddon = nint.Zero;
+    SortedDictionary<string, nint> _lastAddons = new SortedDictionary<string, nint>();
     private System.Numerics.Vector3 _lastPosition;
     private bool _banging = false;
     DateTime lastTime = DateTime.Now;
+    bool isHealed = true;
     public void OnFrameworkUpdate(Framework _)
     {
-      nint addon = _lastAddon;
+      character = (Character)gameObjects[0];
+      nint addonPtr = nint.Zero;
       foreach (var entry in addonDict)
       {
-        addon = gameGui.GetAddonByName(entry.Key);
-        if (addon != nint.Zero && _lastAddon != addon)
+        addonPtr = gameGui.GetAddonByName(entry.Key);
+        if (addonPtr != nint.Zero && addonPtr != _lastAddons[entry.Key])
         {
-          AddonEvent.Invoke(addon, entry.Key);
-          _lastAddon = addon;
+          AddonEvent.Invoke(addonPtr, entry.Key);
         }
+        _lastAddons[entry.Key] = addonPtr;
       }
-
-      var position = gameObjects[0].Position;
-      if (position == _lastPosition && tryingToMove())
+      if (character != null)
       {
-        if (_banging)
+        var position = character.Position;
+        if (position == _lastPosition && tryingToMove())
         {
-          DateTime now = DateTime.Now;
-          if (now.Subtract(lastTime).TotalMilliseconds >= 650)
+          if (_banging)
           {
-            UIModule.PlayChatSoundEffect(16);
-            lastTime = now;
+            DateTime now = DateTime.Now;
+            if (now.Subtract(lastTime).TotalMilliseconds >= 650)
+            {
+              UIModule.PlayChatSoundEffect(16);
+              lastTime = now;
+            }
           }
+          _banging = true;
         }
-        _banging = true;
+        else
+        {
+          _banging = false;
+        }
+        _lastPosition = position;
+
+        float percHP = (character.CurrentHp / character.MaxHp * 100);
+        if (percHP <= 98 && isHealed)
+        {
+          UIModule.PlayChatSoundEffect(11);
+          isHealed = false;
+        }
+        else if (percHP >= 99)
+        {
+          isHealed = true;
+        }
       }
-      else
-      {
-        _banging = false;
-      }
-      _lastPosition = position;
     }
     /*
   private void onChat(XivChatType type, uint senderId, ref SeString sender, ref SeString message, ref bool isHandled)

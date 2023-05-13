@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
 using Dalamud.ContextMenu;
@@ -21,7 +22,7 @@ namespace FFXIVAccess
       { "TelepotTown", typeof(AddonTeleport) },
       {"SystemMenu", typeof(AddonSelectString) },
       {"Journal", typeof(AddonSelectString) },
-      {"MonsterNote", typeof(AddonSelectString) },
+      {"SelectYesno", typeof(AddonSelectYesno) },
       //{"AreaMap", typeof(AddonSelectString) },
       {"WorldTravelSelect", typeof(AddonSelectString) },
       //{ "ScreenFrameSystem", typeof(AddonSelectString) },
@@ -74,16 +75,23 @@ namespace FFXIVAccess
     private unsafe void onSelectString(nint obj, string name)
     {
       ScreenReader.Output(name);
-      var addon = Dalamud.SafeMemory.PtrToStructure<FFXIVClientStructs.FFXIV.Client.UI.AddonSelectString>(obj);
-      if (addon != null)
+      var addonStruct = Dalamud.SafeMemory.PtrToStructure<FFXIVClientStructs.FFXIV.Client.UI.AddonSelectString>(obj);
+      if (addonStruct != null)
       {
-        var values = addon.Value.AtkUnitBase.AtkValues;
-        for (int i = 0; i < 10; i++)
+        var values = addonStruct.Value.AtkUnitBase.AtkValues;
+        for (int i = 0; i < 255; i++)
         {
-          if (values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String8 || values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.AllocatedString || values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String)
+          try
           {
-            var text = Dalamud.Memory.MemoryHelper.ReadSeStringNullTerminated((IntPtr)values[i].String).TextValue;
-            ScreenReader.Output(text);
+            if (values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String8 || values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.AllocatedString || values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String)
+            {
+              var text = Dalamud.Memory.MemoryHelper.ReadSeStringNullTerminated((IntPtr)values[i].String).TextValue;
+              ScreenReader.Output(text);
+            }
+          }
+          catch (NullReferenceException e)
+          {
+            continue;
           }
         }
       }
