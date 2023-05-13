@@ -8,11 +8,30 @@ using Dalamud.Game.Gui;
 using Dalamud.Game.Gui.FlyText;
 using Dalamud.Game.Gui.Toast;
 using Dalamud.Game.Text.SeStringHandling;
+using FFXIVClientStructs.FFXIV.Client.UI;
 
 namespace FFXIVAccess
 {
   public partial class Plugin
   {
+    public static readonly Dictionary<string, Type> addonDict = new Dictionary<string, Type>
+    {
+    { "SelectString", typeof(AddonSelectString) },
+    { "Character", typeof(AddonCharacterInspect) },
+      { "TelepotTown", typeof(AddonTeleport) },
+      {"SystemMenu", typeof(AddonSelectString) },
+      {"Journal", typeof(AddonSelectString) },
+      {"MonsterNote", typeof(AddonSelectString) },
+      //{"AreaMap", typeof(AddonSelectString) },
+      {"WorldTravelSelect", typeof(AddonSelectString) },
+      //{ "ScreenFrameSystem", typeof(AddonSelectString) },
+      //{"ContextMenu", typeof(AddonSelectString) },
+      //{"AddonContextMenuTitle", typeof(AddonSelectString)},
+      { "Telepot", typeof(AddonTeleport) },
+      { "ParameterWidget", typeof(AddonSelectString) },
+      { "EnemyList", typeof(AddonSelectString) },
+    };
+
     private void onQuestToast(ref SeString message, ref QuestToastOptions options, ref bool isHandled)
     {
       ScreenReader.Output(message.TextValue);

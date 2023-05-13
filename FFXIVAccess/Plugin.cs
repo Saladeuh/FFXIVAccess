@@ -29,23 +29,6 @@ namespace FFXIVAccess
     private Lumina.Excel.ExcelSheet<Quest> questList;
     private Lumina.Excel.ExcelSheet<Item> itemList;
     private Lumina.Excel.ExcelSheet<Addon> addonList;
-    public static readonly Dictionary<string, Type> addonDict = new Dictionary<string, Type>
-    {
-    { "SelectString", typeof(AddonSelectString) },
-    { "Character", typeof(AddonCharacterInspect) },
-      { "TelepotTown", typeof(AddonTeleport) },
-      {"SystemMenu", typeof(AddonSelectString) },
-      {"Journal", typeof(AddonSelectString) },
-      {"MonsterNote", typeof(AddonSelectString) },
-      //{"AreaMap", typeof(AddonSelectString) },
-      {"WorldTravelSelect", typeof(AddonSelectString) },
-      //{ "ScreenFrameSystem", typeof(AddonSelectString) },
-      //{"ContextMenu", typeof(AddonSelectString) },
-      //{"AddonContextMenuTitle", typeof(AddonSelectString)},
-      { "Telepot", typeof(AddonTeleport) },
-      { "ParameterWidget", typeof(AddonSelectString) },
-      { "EnemyList", typeof(AddonSelectString) },
-    };
     private DalamudPluginInterface PluginInterface { get; init; }
     private CommandManager CommandManager { get; init; }
     private DataManager dataManager { get; init; }
@@ -133,7 +116,7 @@ namespace FFXIVAccess
       }
 
       var position = gameObjects[0].Position;
-      if (position == _lastPosition && (keyState[VirtualKey.A] || keyState[VirtualKey.E] || keyState[VirtualKey.Z] || keyState[VirtualKey.S]))
+      if (position == _lastPosition && tryingToMove())
       {
         if (_banging)
         {
@@ -141,7 +124,6 @@ namespace FFXIVAccess
           if (now.Subtract(lastTime).TotalMilliseconds >= 650)
           {
             UIModule.PlayChatSoundEffect(16);
-            //ScreenReader.Output("Mur!");
             lastTime = now;
           }
         }
