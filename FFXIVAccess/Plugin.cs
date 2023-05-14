@@ -18,6 +18,7 @@ using Dalamud.Plugin;
 using DavyKager;
 using FFXIVAccess.Windows;
 using FFXIVClientStructs.FFXIV.Client.UI;
+using FFXIVClientStructs.FFXIV.Component.GUI;
 using Lumina.Excel.GeneratedSheets;
 
 namespace FFXIVAccess
@@ -48,7 +49,7 @@ namespace FFXIVAccess
     private ConfigWindow ConfigWindow { get; init; }
     private MainWindow MainWindow { get; init; }
 
-    public event Action<nint, string> AddonEvent;
+    public event Action<nint, string> NewAddonOpenedEvent;
     public Plugin(
       [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
       ChatGui chat,
@@ -90,7 +91,7 @@ namespace FFXIVAccess
       toastGui.Toast += onToast;
       toastGui.ErrorToast += onErrorToast;
       toastGui.QuestToast += onQuestToast;
-      AddonEvent += onSelectString;
+      NewAddonOpenedEvent += onSelectString;
       ConfigWindow = new ConfigWindow(this);
       CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
       {
@@ -101,6 +102,8 @@ namespace FFXIVAccess
       PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
     }
 
+    private nint FocusedAddon = nint.Zero;
+    private AtkResNode? FocusedNode;
     SortedDictionary<string, nint> _lastAddons = new SortedDictionary<string, nint>();
     private System.Numerics.Vector3 _lastPosition;
     private bool _banging = false;
@@ -115,10 +118,13 @@ namespace FFXIVAccess
         addonPtr = gameGui.GetAddonByName(entry.Key);
         if (addonPtr != nint.Zero && addonPtr != _lastAddons[entry.Key])
         {
-          AddonEvent.Invoke(addonPtr, entry.Key);
+          NewAddonOpenedEvent.Invoke(addonPtr, entry.Key);
+          FocusedAddon = addonPtr;
         }
         _lastAddons[entry.Key] = addonPtr;
       }
+      FocusedNode = getTargetCursorNode(FocusedAddon);
+
       if (character != null)
       {
         var position = character.Position;

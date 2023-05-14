@@ -5,11 +5,13 @@ using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using Dalamud;
 using Dalamud.ContextMenu;
 using Dalamud.Game.Gui;
 using Dalamud.Game.Gui.FlyText;
 using Dalamud.Game.Gui.Toast;
 using Dalamud.Game.Text.SeStringHandling;
+using Dalamud.Memory;
 using FFXIVClientStructs.Attributes;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
@@ -38,7 +40,6 @@ namespace FFXIVAccess
       { "_TitleMenu", typeof(AddonSelectString) },
       { "_CharaSelectListMenu", typeof(AddonSelectString) },
       { "SelectOk", typeof(AddonSelectString) },
-      { "ScenarioTree", typeof(AddonSelectString) },
   };
 
     private void onQuestToast(ref SeString message, ref QuestToastOptions options, ref bool isHandled)
@@ -82,16 +83,19 @@ namespace FFXIVAccess
     }
     private unsafe void onSelectString(nint obj, string name)
     {
-      ScreenReader.Output(name);
       try
       {
-        var addonStructTes =Dalamud.SafeMemory.PtrToStructure<AddonSelectString>(obj);
-      } catch (NullReferenceException e) {
+        var addonStructTes = Dalamud.SafeMemory.PtrToStructure<AddonSelectString>(obj);
+      }
+      catch (NullReferenceException e)
+      {
         return;
       }
       var addonStruct = Dalamud.SafeMemory.PtrToStructure<AddonSelectString>(obj);
       if (addonStruct.HasValue)
       {
+        var atk = addonStruct.Value.AtkUnitBase;
+        ScreenReader.Output(MemoryHelper.ReadSeStringNullTerminated((IntPtr)atk.Name).TextValue);
         var values = addonStruct.Value.AtkUnitBase.AtkValues;
         for (int i = 0; i < addonStruct.Value.AtkUnitBase.AtkValuesCount; i++)
         {
@@ -120,6 +124,19 @@ namespace FFXIVAccess
         }
       }
       return false;
+    }
+    private unsafe AtkResNode? getTargetCursorNode(IntPtr addonPtr)
+    {
+      try
+      {
+        var addonStructTes = Dalamud.SafeMemory.PtrToStructure<AddonSelectString>(addonPtr);
+      }
+      catch (NullReferenceException e)
+      {
+        return null;
+      }
+      var addonStruct = Dalamud.SafeMemory.PtrToStructure<AddonSelectString>(addonPtr);
+      return SafeMemory.PtrToStructure<AtkResNode>((IntPtr)addonStruct.Value.AtkUnitBase.CursorTarget);
     }
   }
 }
