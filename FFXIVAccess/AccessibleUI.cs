@@ -35,7 +35,11 @@ namespace FFXIVAccess
       { "Teleport", typeof(AddonTeleport) },
       { "ParameterWidget", typeof(AddonSelectString) },
       { "EnemyList", typeof(AddonSelectString) },
-    };
+      { "_TitleMenu", typeof(AddonSelectString) },
+      { "_CharaSelectListMenu", typeof(AddonSelectString) },
+      { "SelectOk", typeof(AddonSelectString) },
+      { "ScenarioTree", typeof(AddonSelectString) },
+  };
 
     private void onQuestToast(ref SeString message, ref QuestToastOptions options, ref bool isHandled)
     {
