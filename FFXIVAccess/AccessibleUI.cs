@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Metadata.Ecma335;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using Dalamud.ContextMenu;
@@ -9,7 +10,10 @@ using Dalamud.Game.Gui;
 using Dalamud.Game.Gui.FlyText;
 using Dalamud.Game.Gui.Toast;
 using Dalamud.Game.Text.SeStringHandling;
+using FFXIVClientStructs.Attributes;
 using FFXIVClientStructs.FFXIV.Client.UI;
+using FFXIVClientStructs.FFXIV.Component.GUI;
+using Lumina.Excel.GeneratedSheets;
 
 namespace FFXIVAccess
 {
@@ -23,12 +27,12 @@ namespace FFXIVAccess
       {"SystemMenu", typeof(AddonSelectString) },
       {"Journal", typeof(AddonSelectString) },
       {"SelectYesno", typeof(AddonSelectYesno) },
+      {"CharaSelect", typeof(AddonSelectString) },
       //{"AreaMap", typeof(AddonSelectString) },
       {"WorldTravelSelect", typeof(AddonSelectString) },
       //{ "ScreenFrameSystem", typeof(AddonSelectString) },
       //{"ContextMenu", typeof(AddonSelectString) },
-      //{"AddonContextMenuTitle", typeof(AddonSelectString)},
-      { "Telepot", typeof(AddonTeleport) },
+      { "Teleport", typeof(AddonTeleport) },
       { "ParameterWidget", typeof(AddonSelectString) },
       { "EnemyList", typeof(AddonSelectString) },
     };
@@ -75,11 +79,17 @@ namespace FFXIVAccess
     private unsafe void onSelectString(nint obj, string name)
     {
       ScreenReader.Output(name);
-      var addonStruct = Dalamud.SafeMemory.PtrToStructure<FFXIVClientStructs.FFXIV.Client.UI.AddonSelectString>(obj);
-      if (addonStruct != null)
+      try
+      {
+        var addonStructTes =Dalamud.SafeMemory.PtrToStructure<AddonSelectString>(obj);
+      } catch (NullReferenceException e) {
+        return;
+      }
+      var addonStruct = Dalamud.SafeMemory.PtrToStructure<AddonSelectString>(obj);
+      if (addonStruct.HasValue)
       {
         var values = addonStruct.Value.AtkUnitBase.AtkValues;
-        for (int i = 0; i < 255; i++)
+        for (int i = 0; i < addonStruct.Value.AtkUnitBase.AtkValuesCount; i++)
         {
           try
           {
@@ -96,6 +106,16 @@ namespace FFXIVAccess
         }
       }
     }
-
+    private bool isAnyKeyBind()
+    {
+      foreach (var key in keyState.GetValidVirtualKeys())
+      {
+        if (keyState[key])
+        {
+          return true;
+        }
+      }
+      return false;
+    }
   }
 }
