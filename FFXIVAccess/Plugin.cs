@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Dalamud.ContextMenu;
 using Dalamud.Data;
 using Dalamud.Game;
+using Dalamud.Game.ClientState;
 using Dalamud.Game.ClientState.Keys;
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.Game.ClientState.Objects.Types;
@@ -36,10 +37,10 @@ namespace FFXIVAccess
     private FlyTextGui flyTextGui { get; init; }
     public KeyState keyState { get; private set; }
     private ObjectTable gameObjects { get; init; }
-    public Dalamud.Game.ClientState.Objects.Types.Character? character { get; set; }
     public GameGui gameGui { get; private set; }
     public SeStringManager seStringManager { get; private set; }
     private TitleScreenMenu titleScreenMenu { get; set; }
+    public ClientState clientState { get; private set; }
     private ToastGui toastGui { get; set; }
     public Configuration Configuration { get; init; }
     public WindowSystem WindowSystem = new("SamplePlugin");
@@ -53,6 +54,7 @@ namespace FFXIVAccess
     public Plugin(
       [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
       ChatGui chat,
+      ClientState clientState,
       [RequiredVersion("1.0")] CommandManager commandManager,
       Framework framework,
       FlyTextGui flyTextGui,
@@ -69,8 +71,8 @@ namespace FFXIVAccess
       PluginInterface = pluginInterface;
       CommandManager = commandManager;
       this.titleScreenMenu = titleScreenMenu;
+      this.clientState= clientState;
       this.gameObjects = gameObjects;
-      this.character = (Dalamud.Game.ClientState.Objects.Types.Character)gameObjects[0];
       this.gameGui = gameGui;
       this.seStringManager = seStringManager;
       this.toastGui = toastGui;
@@ -111,7 +113,6 @@ namespace FFXIVAccess
     bool isHealed = true;
     public unsafe void OnFrameworkUpdate(Framework _)
     {
-      character = (Character)gameObjects[0];
       nint addonPtr = nint.Zero;
       foreach (var entry in addonDict)
       {
@@ -131,9 +132,9 @@ namespace FFXIVAccess
       }
       _lastFocusedNode = *focusedNode;
       */
-        if (character != null)
+        if (clientState.LocalPlayer != null)
       {
-        var position = character.Position;
+        var position = clientState.LocalPlayer.Position;
         if (position == _lastPosition && tryingToMove())
         {
           if (_banging)
@@ -153,7 +154,7 @@ namespace FFXIVAccess
         }
         _lastPosition = position;
 
-        float percHP = (character.CurrentHp / character.MaxHp * 100);
+        float percHP = (clientState.LocalPlayer.CurrentHp / clientState.LocalPlayer.MaxHp * 100);
         if (percHP <= 98 && isHealed)
         {
           UIModule.PlayChatSoundEffect(11);
