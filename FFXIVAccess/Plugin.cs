@@ -30,7 +30,6 @@ namespace FFXIVAccess
     private const string CommandName = "/pmycommand";
     private Lumina.Excel.ExcelSheet<Quest> questList;
     private Lumina.Excel.ExcelSheet<Item> itemList;
-    private Lumina.Excel.ExcelSheet<Addon> addonList;
     private DalamudPluginInterface PluginInterface { get; init; }
     private CommandManager CommandManager { get; init; }
     private DataManager dataManager { get; init; }
@@ -50,6 +49,7 @@ namespace FFXIVAccess
     private MainWindow MainWindow { get; init; }
 
     public event Action<nint, string> NewAddonOpenedEvent;
+    public event Action<AtkResNode?> NodeFocusChangedEvent;
     public Plugin(
       [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
       ChatGui chat,
@@ -79,7 +79,6 @@ namespace FFXIVAccess
       //chat.ChatMessage += onChat;
       itemList = dataManager.GetExcelSheet<Item>();
       questList = dataManager.GetExcelSheet<Quest>();
-      addonList = dataManager.GetExcelSheet<Addon>();
       var contextMenu = new DalamudContextMenu();
       contextMenu.OnOpenGameObjectContextMenu += OpenGameObjectContextMenu;
       contextMenu.OnOpenInventoryContextMenu += OpenInventory;
@@ -92,6 +91,7 @@ namespace FFXIVAccess
       toastGui.ErrorToast += onErrorToast;
       toastGui.QuestToast += onQuestToast;
       NewAddonOpenedEvent += onSelectString;
+      //NodeFocusChangedEvent += onNodeFocusChanged;
       ConfigWindow = new ConfigWindow(this);
       CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
       {
@@ -103,13 +103,13 @@ namespace FFXIVAccess
     }
 
     private nint FocusedAddon = nint.Zero;
-    private AtkResNode? FocusedNode;
+    private AtkResNode? _lastFocusedNode;
     SortedDictionary<string, nint> _lastAddons = new SortedDictionary<string, nint>();
     private System.Numerics.Vector3 _lastPosition;
     private bool _banging = false;
     DateTime lastTime = DateTime.Now;
     bool isHealed = true;
-    public void OnFrameworkUpdate(Framework _)
+    public unsafe void OnFrameworkUpdate(Framework _)
     {
       character = (Character)gameObjects[0];
       nint addonPtr = nint.Zero;
@@ -123,9 +123,15 @@ namespace FFXIVAccess
         }
         _lastAddons[entry.Key] = addonPtr;
       }
-      FocusedNode = getTargetCursorNode(FocusedAddon);
-
-      if (character != null)
+      /*
+      var focusedNode = AtkStage.GetSingleton()->GetFocus();
+      if ((_lastFocusedNode!=null && focusedNode!=null && _lastFocusedNode.Value.NodeID != focusedNode->NodeID) || focusedNode!=null)
+      {
+        NodeFocusChangedEvent.Invoke(*focusedNode);
+      }
+      _lastFocusedNode = *focusedNode;
+      */
+        if (character != null)
       {
         var position = character.Position;
         if (position == _lastPosition && tryingToMove())
