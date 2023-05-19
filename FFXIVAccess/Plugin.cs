@@ -21,6 +21,8 @@ using FFXIVAccess.Windows;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using Lumina.Excel.GeneratedSheets;
+using Mappy;
+using Mappy.System;
 
 namespace FFXIVAccess
 {
@@ -29,7 +31,7 @@ namespace FFXIVAccess
     public string Name => "FFXIVAccess";
     public string Version => "0.0.0";
     private const string CommandName = "/pmycommand";
-    private Lumina.Excel.ExcelSheet<Quest> questList;
+    public static Lumina.Excel.ExcelSheet<CustomQuestSheet> questList;
     private Lumina.Excel.ExcelSheet<Item> itemList;
     private DalamudPluginInterface PluginInterface { get; init; }
     private CommandManager CommandManager { get; init; }
@@ -42,6 +44,7 @@ namespace FFXIVAccess
     private TitleScreenMenu titleScreenMenu { get; set; }
     public ClientState clientState { get; private set; }
     private ToastGui toastGui { get; set; }
+    public QuestManager questManager = null!;
     public Configuration Configuration { get; init; }
     public WindowSystem WindowSystem = new("SamplePlugin");
     [PluginService] public static ChatGui Chat { get; set; } = null!;
@@ -68,19 +71,25 @@ namespace FFXIVAccess
     {
       ScreenReader.Load(this.Name, this.Version);
       Tolk.Output("Screen Reader ready");
+      // Mappy services
       PluginInterface = pluginInterface;
+      pluginInterface.Create<Service>();
+      Service.Cache = new CompositeLuminaCache();
+      Service.ModuleManager = new ModuleManager();
+      Service.QuestManager = new QuestManager();
+      Service.MapManager = new MapManager();
       CommandManager = commandManager;
       this.titleScreenMenu = titleScreenMenu;
       this.clientState= clientState;
       this.gameObjects = gameObjects;
       this.gameGui = gameGui;
-      this.seStringManager = seStringManager;
+      this.questManager= new QuestManager();
       this.toastGui = toastGui;
       Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
       Configuration.Initialize(PluginInterface);
       //chat.ChatMessage += onChat;
       itemList = dataManager.GetExcelSheet<Item>();
-      questList = dataManager.GetExcelSheet<Quest>();
+      questList = dataManager.GetExcelSheet<CustomQuestSheet>();
       var contextMenu = new DalamudContextMenu();
       contextMenu.OnOpenGameObjectContextMenu += OpenGameObjectContextMenu;
       contextMenu.OnOpenInventoryContextMenu += OpenInventory;

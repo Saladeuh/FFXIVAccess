@@ -1,13 +1,18 @@
 // trash tests
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design.Serialization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Dalamud;
 using Dalamud.Game.Text.SeStringHandling;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.Graphics.Environment;
+using FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
 using Lumina.Excel.GeneratedSheets;
+using Mappy;
+using Mappy.Utilities;
 
 namespace FFXIVAccess
 {
@@ -15,44 +20,44 @@ namespace FFXIVAccess
   {
     private unsafe void OnCommand(string command, string args)
     {
-      //onNodeFocusChanged(_lastFocusedNode);
-    /*
-      var questArray = QuestManager.Instance()->Quest;
-      var accepted = QuestManager.Instance()->NumAcceptedQuests.ToString();
+      /*
+      var space = SafeMemory.PtrToStructure<EnvSpace>((IntPtr)EnvManager.Instance()->EnvScene->EnvSpaces);
+      if (space.HasValue)
+      {
+        ScreenReader.Output(space.Value.DrawObject.Object.NextSiblingObject->GetObjectType().ToString());
+        ScreenReader.Output(space.Value.DrawObject.Object.PreviousSiblingObject->GetObjectType().ToString());
+        //ScreenReader.Output(space.Value.DrawObject.Object.GetObjectType().ToString());
+      }
+      */
+
+      var questArray = FFXIVClientStructs.FFXIV.Client.Game.QuestManager.Instance()->Quest;
+      var accepted = FFXIVClientStructs.FFXIV.Client.Game.QuestManager.Instance()->NumAcceptedQuests.ToString();
+      var acceptedQuests = Service.QuestManager.GetAcceptedQuests();
       for (int i = 0; i <= 100; i++)
       {
         var q = questArray[i];
-        var id = q->QuestID + 65536;
-        if (id != 65536)
+        if (q != null) { 
+        int id = q->QuestID;
+        foreach (var extQuest in acceptedQuests)
         {
-          var name = questList.GetRow((uint)id).Name;
-          var genre = questList.GetRow((uint)id).JournalGenre.Value.Name;
-          var place = questList.GetRow((uint)id).PlaceName.Value.Name;
-          var npc = questList.GetRow((uint)id).SatisfactionNpc;
-          var intro = questList.GetRow((uint)id).ScriptInstruction;
-          var npcTitle = "";
-          if (npc.IsValueCreated)
-          {
-            npcTitle = npc.Value.Npc.Value.Title;
-          }
-          ScreenReader.Output($"{name}: {place} {npcTitle} {genre}");
-          foreach(SeString line in intro)
-          {
-            ScreenReader.Output(line.Payloads[0].Type.ToString());
-          }
-        }
-        }
-      /*
-      foreach (TitleScreenMenuEntry e in titleScreenMenu.Entries)
-      {
-        ScreenReader.Output(e.Name);
-      }
+            if (extQuest.QuestID == id)
+            {
+              id += 65536;
+              var name = questList.GetRow((uint)id).Name;
+              var place = questList.GetRow((uint)id).PlaceName.Value.Name;
+              ScreenReader.Output($"{name}: {place} {Service.QuestManager.GetLevelsForQuest(extQuest).Count()} {Service.MapManager.LoadedMapId}");
+              foreach (var level in Service.QuestManager.GetLevelsForQuest(extQuest))
+              {
+                var levelPlace = level.Map.Value.GetName();
+                var levelX = level.X;
+                var levelY = level.Y;
+                ScreenReader.Output($"{levelPlace}: {levelX},{levelY}");
+              }
+            }
 
-      foreach (var o in gameObjects)
-      {
-          ScreenReader.Output(o.Name);
+        }
+        }
       }
-      */
     }
   }
 }
