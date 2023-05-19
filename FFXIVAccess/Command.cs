@@ -18,28 +18,19 @@ namespace FFXIVAccess
 {
   public partial class Plugin
   {
-    private unsafe void OnCommand(string command, string args)
+    private unsafe void OnQuestCommand(string command, string args)
     {
-      /*
-      var space = SafeMemory.PtrToStructure<EnvSpace>((IntPtr)EnvManager.Instance()->EnvScene->EnvSpaces);
-      if (space.HasValue)
-      {
-        ScreenReader.Output(space.Value.DrawObject.Object.NextSiblingObject->GetObjectType().ToString());
-        ScreenReader.Output(space.Value.DrawObject.Object.PreviousSiblingObject->GetObjectType().ToString());
-        //ScreenReader.Output(space.Value.DrawObject.Object.GetObjectType().ToString());
-      }
-      */
-
       var questArray = FFXIVClientStructs.FFXIV.Client.Game.QuestManager.Instance()->Quest;
       var accepted = FFXIVClientStructs.FFXIV.Client.Game.QuestManager.Instance()->NumAcceptedQuests.ToString();
       var acceptedQuests = Service.QuestManager.GetAcceptedQuests();
       for (int i = 0; i <= 100; i++)
       {
         var q = questArray[i];
-        if (q != null) { 
-        int id = q->QuestID;
-        foreach (var extQuest in acceptedQuests)
+        if (q != null)
         {
+          int id = q->QuestID;
+          foreach (var extQuest in acceptedQuests)
+          {
             if (extQuest.QuestID == id)
             {
               id += 65536;
@@ -55,9 +46,23 @@ namespace FFXIVAccess
               }
             }
 
-        }
+          }
         }
       }
+    }
+    private unsafe void OnCommand(string command, string args)
+    {
+      /*
+      var space = SafeMemory.PtrToStructure<EnvSpace>((IntPtr)EnvManager.Instance()->EnvScene->EnvSpaces);
+      if (space.HasValue)
+      {
+        ScreenReader.Output(space.Value.DrawObject.Object.NextSiblingObject->GetObjectType().ToString());
+        ScreenReader.Output(space.Value.DrawObject.Object.PreviousSiblingObject->GetObjectType().ToString());
+        //ScreenReader.Output(space.Value.DrawObject.Object.GetObjectType().ToString());
+      }
+      */
+
+      
     }
   }
 }

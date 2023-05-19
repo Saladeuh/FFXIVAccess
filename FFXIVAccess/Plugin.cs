@@ -30,7 +30,6 @@ namespace FFXIVAccess
   {
     public string Name => "FFXIVAccess";
     public string Version => "0.0.0";
-    private const string CommandName = "/pmycommand";
     public static Lumina.Excel.ExcelSheet<CustomQuestSheet> questList;
     private Lumina.Excel.ExcelSheet<Item> itemList;
     private DalamudPluginInterface PluginInterface { get; init; }
@@ -104,7 +103,11 @@ namespace FFXIVAccess
       NewAddonOpenedEvent += onSelectString;
       //NodeFocusChangedEvent += onNodeFocusChanged;
       ConfigWindow = new ConfigWindow(this);
-      CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
+      CommandManager.AddHandler("/test", new CommandInfo(OnCommand)
+      {
+        HelpMessage = "A useful message to display in /xlhelp"
+      });
+      CommandManager.AddHandler("/quest", new CommandInfo(OnQuestCommand)
       {
         HelpMessage = "A useful message to display in /xlhelp"
       });
@@ -205,7 +208,8 @@ namespace FFXIVAccess
       ConfigWindow.Dispose();
       MainWindow.Dispose();
 
-      CommandManager.RemoveHandler(CommandName);
+      CommandManager.RemoveHandler("/test");
+      CommandManager.RemoveHandler("/quest");
       ScreenReader.Unload();
     }
 
