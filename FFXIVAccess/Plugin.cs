@@ -16,9 +16,11 @@ using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
+using Dalamud.Utility;
 using DavyKager;
 using FFXIVAccess.Windows;
 using FFXIVClientStructs.FFXIV.Client.UI;
+using FFXIVClientStructs.FFXIV.Common.Math;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using Lumina.Excel.GeneratedSheets;
 using Mappy;
@@ -111,6 +113,10 @@ namespace FFXIVAccess
       {
         HelpMessage = "A useful message to display in /xlhelp"
       });
+      CommandManager.AddHandler("/currentmapquest", new CommandInfo(OnCurrentMapQuestLevelCommand)
+      {
+        HelpMessage = "A useful message to display in /xlhelp"
+      });
 
       PluginInterface.UiBuilder.Draw += DrawUI;
       PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
@@ -160,7 +166,11 @@ namespace FFXIVAccess
           }
           _banging = true;
         }
-        else
+        else if (tryingToMove())
+        {
+          ScreenReader.Output($"{position} {clientState.LocalPlayer.Rotation}");
+          _banging = false;
+        } else
         {
           _banging = false;
         }

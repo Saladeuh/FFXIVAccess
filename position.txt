@@ -1,0 +1,8 @@
+-1,5: avant -x, recul +x, gauche -z, droite +z
+3: avant -z, recul +z, gauche: -x, droite +x
+0: avant +z, recul -z, gaume +x, droite -x
+nord: pi
+se++: 0-1,67
+ne+-: 1,67-3,14
+so-+: -1,60-0
+no--: -1,67- -pi
