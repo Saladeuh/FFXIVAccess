@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Dalamud.ContextMenu;
 using Dalamud.Data;
 using Dalamud.Game;
@@ -52,6 +53,7 @@ namespace FFXIVAccess
 
     private ConfigWindow ConfigWindow { get; init; }
     private MainWindow MainWindow { get; init; }
+    public SoundSystem soundSystem { get; private set; }
 
     public event Action<nint, string> NewAddonOpenedEvent;
     public event Action<AtkResNode?> NodeFocusChangedEvent;
@@ -71,6 +73,7 @@ namespace FFXIVAccess
       )
     {
       ScreenReader.Load(this.Name, this.Version);
+      soundSystem= new SoundSystem();
       Tolk.Output("Screen Reader ready");
       // Mappy services
       PluginInterface = pluginInterface;
@@ -168,14 +171,13 @@ namespace FFXIVAccess
         }
         else if (tryingToMove())
         {
-          ScreenReader.Output($"{position} {clientState.LocalPlayer.Rotation}");
+          ScreenReader.Output($"{Util.ConvertOrientationToVector(clientState.LocalPlayer.Rotation)} {position} {clientState.LocalPlayer.Rotation}");
           _banging = false;
         } else
         {
           _banging = false;
         }
         _lastPosition = position;
-
         float percHP = (clientState.LocalPlayer.CurrentHp / clientState.LocalPlayer.MaxHp * 100);
         if (percHP <= 98 && isHealed)
         {
@@ -187,6 +189,8 @@ namespace FFXIVAccess
           isHealed = true;
         }
       }
+      soundSystem.System.Set3DListenerAttributes(0, this.clientState.LocalPlayer.Position, default, in soundSystem.Forward, in soundSystem.Up);
+      soundSystem.System.Update();
     }
     /*
   private void onChat(XivChatType type, uint senderId, ref SeString sender, ref SeString message, ref bool isHandled)

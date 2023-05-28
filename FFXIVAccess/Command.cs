@@ -1,21 +1,11 @@
 // trash tests
 using System;
-using System.Collections.Generic;
-using System.ComponentModel.Design.Serialization;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Dalamud;
-using Dalamud.Game.Text.SeStringHandling;
-using FFXIVClientStructs.FFXIV.Client.Game;
-using FFXIVClientStructs.FFXIV.Client.Graphics.Environment;
-using FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Common.Math;
-using Lumina.Data.Parsing.Tex.Buffers;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Data.Parsing.Scd;
 using Mappy;
-using Mappy.System;
 using Mappy.Utilities;
 
 namespace FFXIVAccess
@@ -80,8 +70,12 @@ namespace FFXIVAccess
                       directionAngle = float.Pi;
                   }
                   text2 += $" {float.Round(directionAngle, 2)}";
+                  this.soundSystem.c1.Paused = true;
+
                   ScreenReader.Output(text);
                   ScreenReader.Output(text2);
+                  soundSystem.c1.Set3DAttributes(clientState.LocalPlayer.Position, default, default);
+                  soundSystem.c1.Paused = false;
                 }
               }
             }
@@ -120,6 +114,7 @@ namespace FFXIVAccess
     }
     private unsafe void OnCommand(string command, string args)
     {
+      ScreenReader.Output(Directory.GetCurrentDirectory());
       Random rnd = new Random();
       uint id = (uint)rnd.Next(10, 500);
       ScreenReader.Output($"{id}");
