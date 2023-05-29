@@ -9,13 +9,12 @@ namespace FFXIVAccess
 {
   public class Util
   {
-    public static Vector3 ConvertOrientationToVector(float angle)
+    public static (Vector3, Vector3) ConvertOrientationToVector(float angle)
     {
-      double x = 0;
-      double y = 0;
-      double z = 0;
-      /*
+      float x = 0;
+      float z = 0;
       // Détermination du vecteur en fonction de l'angle
+      /*
       if (angle > 0)
       {
         if (angle < Math.PI / 2) // Quadrant sud-est
@@ -47,10 +46,11 @@ namespace FFXIVAccess
         z = 1; // Direction nord
       }
       */
-      x= (float)Math.Cos(angle);
-      z= (float)Math.Sin(angle);
-      return new Vector3(1*SoundSystem.DistanceFactor, 0, 0);
-        //new Vector3((float)x * SoundSystem.DistanceFactor, (float)y, (float)z * SoundSystem.DistanceFactor);
+      x= (float)Math.Sin(angle);
+      z = (float)Math.Cos(angle);
+      return (new Vector3((float)x, 0, (float)z), new Vector3(0, 1, 0));
+      //return (new Vector3((float)(1/Math.Sqrt(2)), 0, (float)(1 / Math.Sqrt(2))), new Vector3(0, 1, 0));
+      //new Vector3((float)x * SoundSystem.DistanceFactor, (float)y, (float)z * SoundSystem.DistanceFactor);
     }
   }
 }

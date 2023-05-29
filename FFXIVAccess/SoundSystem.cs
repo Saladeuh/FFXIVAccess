@@ -17,13 +17,13 @@ namespace FFXIVAccess
     private Vector3 ListenerPos = new Vector3() { Z = -1.0f * DistanceFactor };
     private Sound? s1, s2, s3;
     public Channel c1, c2, c3;
-    public Vector3 Up = new Vector3(0, 1, 0), Forward = new Vector3(0, 0, -1);
+    public Vector3 Up = new Vector3(1, 0, 0), Forward = new Vector3(0, 0, -1);
     public SoundSystem()
     {
       //Creates the FmodSystem object
       System = FmodAudio.Fmod.CreateSystem();
       //System object Initialization
-      System.Init(32);
+      System.Init(32, InitFlags._3D_RightHanded);
 
       //Set the distance Units (Meters/Feet etc)
       System.Set3DSettings(1.0f, DistanceFactor, 1.0f);

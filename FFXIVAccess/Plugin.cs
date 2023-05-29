@@ -171,7 +171,8 @@ namespace FFXIVAccess
         }
         else if (tryingToMove())
         {
-          ScreenReader.Output($"{Util.ConvertOrientationToVector(clientState.LocalPlayer.Rotation)} {position} {clientState.LocalPlayer.Rotation}");
+          ScreenReader.Output($"{Util.ConvertOrientationToVector(clientState.LocalPlayer.Rotation)} " +
+            $"{position} {clientState.LocalPlayer.Rotation}");
           _banging = false;
         } else
         {
@@ -189,7 +190,8 @@ namespace FFXIVAccess
           isHealed = true;
         }
       }
-      soundSystem.System.Set3DListenerAttributes(0, this.clientState.LocalPlayer.Position, default, in soundSystem.Forward, in soundSystem.Up);
+      var rotation = this.clientState.LocalPlayer.Rotation;
+      soundSystem.System.Set3DListenerAttributes(0, clientState.LocalPlayer.Position, default, Util.ConvertOrientationToVector(rotation).Item1, Util.ConvertOrientationToVector(rotation).Item2);
       soundSystem.System.Update();
     }
     /*
