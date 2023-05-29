@@ -1,3 +1,5 @@
+using Dalamud.Game.ClientState.Objects;
+using Dalamud.Game.ClientState.Objects.Types;
 using FmodAudio;
 using System;
 using System.Collections.Generic;
@@ -11,13 +13,14 @@ namespace FFXIVAccess
   public class SoundSystem
   {
     public FmodSystem System { get; }
-    public const float DistanceFactor = 0.5f;
+    public const float DistanceFactor = 2f;
     private float T = 0.0f;
     private Vector3 LastPos;
     private Vector3 ListenerPos = new Vector3() { Z = -1.0f * DistanceFactor };
     private Sound? s1, s2, s3;
     public Channel c1, c2, c3;
-    public Vector3 Up = new Vector3(1, 0, 0), Forward = new Vector3(0, 0, -1);
+    public Vector3 Up = new Vector3(0, 1, 0), Forward = new Vector3(0, 0, -1);
+    public SortedDictionary<uint, Channel> npcChannels = new SortedDictionary<uint, Channel>();
     public SoundSystem()
     {
       //Creates the FmodSystem object
@@ -41,6 +44,22 @@ namespace FFXIVAccess
 
       c1 = System.PlaySound(s1.Value, paused: true);
       c1.Set3DAttributes(in pos, in vel, default);
+    }
+    public void scanMapNPC(ObjectTable gameObjects, uint localPlayerId)
+    {
+      foreach (GameObject t in gameObjects)
+      {
+        if (t.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player && t.ObjectId !=localPlayerId && !t.IsDead)
+        {
+          if (!npcChannels.ContainsKey(t.ObjectId))
+          {
+            Channel channelNPC;
+            channelNPC = System.PlaySound(s1.Value, paused: false);
+            npcChannels[t.ObjectId] = channelNPC;
+          }
+          npcChannels[t.ObjectId].Set3DAttributes(t.Position, default, default);
+        }
+      }
     }
   }
 }

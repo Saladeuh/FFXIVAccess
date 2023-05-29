@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using Dalamud.ContextMenu;
 using Dalamud.Data;
@@ -191,7 +192,8 @@ namespace FFXIVAccess
         }
       }
       var rotation = this.clientState.LocalPlayer.Rotation;
-      soundSystem.System.Set3DListenerAttributes(0, clientState.LocalPlayer.Position, default, Util.ConvertOrientationToVector(rotation).Item1, Util.ConvertOrientationToVector(rotation).Item2);
+      soundSystem.System.Set3DListenerAttributes(0, clientState.LocalPlayer.Position, default, Util.ConvertOrientationToVector(rotation), soundSystem.Up);
+      soundSystem.scanMapNPC(this.gameObjects, clientState.LocalPlayer.ObjectId);
       soundSystem.System.Update();
     }
     /*

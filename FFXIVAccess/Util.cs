@@ -9,7 +9,7 @@ namespace FFXIVAccess
 {
   public class Util
   {
-    public static (Vector3, Vector3) ConvertOrientationToVector(float angle)
+    public static Vector3 ConvertOrientationToVector(float angle)
     {
       float x = 0;
       float z = 0;
@@ -46,11 +46,9 @@ namespace FFXIVAccess
         z = 1; // Direction nord
       }
       */
-      x= (float)Math.Sin(angle);
+      x = (float)Math.Sin(angle);
       z = (float)Math.Cos(angle);
-      return (new Vector3((float)x, 0, (float)z), new Vector3(0, 1, 0));
-      //return (new Vector3((float)(1/Math.Sqrt(2)), 0, (float)(1 / Math.Sqrt(2))), new Vector3(0, 1, 0));
-      //new Vector3((float)x * SoundSystem.DistanceFactor, (float)y, (float)z * SoundSystem.DistanceFactor);
+      return new Vector3((float)x, 0, (float)z);
     }
   }
 }
