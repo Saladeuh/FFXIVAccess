@@ -6,3 +6,4 @@ se++: 0-1,67
 ne+-: 1,67-3,14
 so-+: -1,60-0
 no--: -1,67- -pi
+plus vite: tester partial/tri pnj avant edvoi, nombre channer init

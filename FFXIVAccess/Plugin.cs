@@ -193,7 +193,7 @@ namespace FFXIVAccess
       }
       var rotation = this.clientState.LocalPlayer.Rotation;
       soundSystem.System.Set3DListenerAttributes(0, clientState.LocalPlayer.Position, default, Util.ConvertOrientationToVector(rotation), soundSystem.Up);
-      soundSystem.scanMapNPC(this.gameObjects, clientState.LocalPlayer.ObjectId);
+      soundSystem.scanMapEnnemy(this.gameObjects, clientState.LocalPlayer.ObjectId);
       soundSystem.System.Update();
     }
     /*

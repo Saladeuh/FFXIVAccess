@@ -1,4 +1,5 @@
 using Dalamud.Game.ClientState.Objects;
+using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.Types;
 using FmodAudio;
 using System;
@@ -26,13 +27,13 @@ namespace FFXIVAccess
       //Creates the FmodSystem object
       System = FmodAudio.Fmod.CreateSystem();
       //System object Initialization
-      System.Init(32, InitFlags._3D_RightHanded);
+      System.Init(1024, InitFlags._3D_RightHanded);
 
       //Set the distance Units (Meters/Feet etc)
       System.Set3DSettings(1.0f, DistanceFactor, 1.0f);
       System.Set3DListenerAttributes(0, in ListenerPos, default, in Forward, in Up);
       //Load some sounds
-      float min = 0.5f * DistanceFactor, max = 5000.0f * DistanceFactor;
+      float min = 0.5f * DistanceFactor, max = 50.0f * DistanceFactor;
       Sound sound;
       s1 = sound = System.CreateSound("test.wav", Mode._3D | Mode.Loop_Normal);
       sound.Set3DMinMaxDistance(min, max);
@@ -45,17 +46,29 @@ namespace FFXIVAccess
       c1 = System.PlaySound(s1.Value, paused: true);
       c1.Set3DAttributes(in pos, in vel, default);
     }
-    public void scanMapNPC(ObjectTable gameObjects, uint localPlayerId)
+    public void scanMapEnnemy(ObjectTable gameObjects, uint localPlayerId)
     {
       foreach (GameObject t in gameObjects)
       {
-        if (t.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player && t.ObjectId !=localPlayerId && !t.IsDead)
+        if (t.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc && t.ObjectId !=localPlayerId)
         {
-          if (!npcChannels.ContainsKey(t.ObjectId))
+          BattleNpc npcT = (BattleNpc)t;
+          if (!t.IsDead && (BattleNpcSubKind)t.SubKind== BattleNpcSubKind.Enemy)
           {
-            Channel channelNPC;
-            channelNPC = System.PlaySound(s1.Value, paused: false);
-            npcChannels[t.ObjectId] = channelNPC;
+            if (!npcChannels.ContainsKey(t.ObjectId))
+            {
+              Channel channelNPC;
+              channelNPC = System.PlaySound(s1.Value, paused: false);
+              npcChannels[t.ObjectId] = channelNPC;
+            }
+          }
+          else
+          {
+            if (npcChannels.ContainsKey(t.ObjectId))
+            {
+              npcChannels[t.ObjectId].Paused = true;
+              npcChannels.Remove(t.ObjectId);
+            }
           }
           npcChannels[t.ObjectId].Set3DAttributes(t.Position, default, default);
         }
