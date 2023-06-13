@@ -36,10 +36,8 @@ namespace FFXIVAccess
                 var levelPlace = level.Map.Value.RowId;
                 if (currentMapId == levelPlace)
                 {
-                  var levelX = level.X;
-                  var levelY = level.Y;
-                  var levelZ = level.Z;
-                  var levelVector = new Vector3(levelX, levelY, levelZ);
+                  var levelVector = new Vector3(level.X, level.Y, level.Z);
+                  soundSystem.playFollowMe(levelVector);
                   var characPosition = (FFXIVClientStructs.FFXIV.Common.Math.Vector3)clientState.LocalPlayer.Position;
                   var path = levelVector - characPosition;
                   text2 += $" {path}: {Vector3.Distance(characPosition, levelVector)}";
@@ -70,12 +68,8 @@ namespace FFXIVAccess
                       directionAngle = float.Pi;
                   }
                   text2 += $" {float.Round(directionAngle, 2)}";
-                  this.soundSystem.c1.Paused = true;
-
                   ScreenReader.Output(text);
                   ScreenReader.Output(text2);
-                  soundSystem.c1.Set3DAttributes(clientState.LocalPlayer.Position, default, default);
-                  soundSystem.c1.Paused = false;
                 }
               }
             }
@@ -85,6 +79,7 @@ namespace FFXIVAccess
     }
     private unsafe void OnQuestCommand(string command, string args)
     {
+      // send all quests and details
       var questArray = FFXIVClientStructs.FFXIV.Client.Game.QuestManager.Instance()->Quest;
       var accepted = FFXIVClientStructs.FFXIV.Client.Game.QuestManager.Instance()->NumAcceptedQuests.ToString();
       var acceptedQuests = Service.QuestManager.GetAcceptedQuests();

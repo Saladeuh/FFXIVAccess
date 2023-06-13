@@ -15,8 +15,7 @@ namespace FFXIVAccess
   {
     public FmodSystem System { get; }
     private Vector3 ListenerPos = new Vector3() { Z = -1.0f };
-    private Sound? s1, s2, s3;
-    public Channel c1, c2, c3;
+    private Sound? EnnemySound, FollowMeSound, s3;
     public Vector3 Up = new Vector3(0, 1, 0), Forward = new Vector3(0, 0, -1);
     public SortedDictionary<uint, Channel> npcChannels = new SortedDictionary<uint, Channel>();
     public SoundSystem()
@@ -30,12 +29,14 @@ namespace FFXIVAccess
       System.Set3DSettings(1.0f, 1.0f, 1.0f);
       System.Set3DListenerAttributes(0, in ListenerPos, default, in Forward, in Up);
       //Load some sounds
-      float min = 2f, max = 40f;
+      float min = 2f, max = 40f; // 40 is apprximatively
       Sound sound;
-      s1 = sound = System.CreateSound("test.wav", Mode._3D | Mode.Loop_Normal);
+
+      EnnemySound = sound = System.CreateSound("test.wav", Mode._3D | Mode.Loop_Normal | Mode._3D_LinearSquareRolloff);
       sound.Set3DMinMaxDistance(min, max);
-      sound.Mode = Mode._3D_LinearSquareRolloff;
-      c1 = System.PlaySound(s1.Value, paused: true);
+
+      FollowMeSound = sound = System.CreateSound("followMe.wav", Mode._3D | Mode.Loop_Normal | Mode._3D_LinearSquareRolloff);
+      sound.Set3DMinMaxDistance(min, 1000f);
     }
     public void scanMapEnnemy(ObjectTable gameObjects, uint localPlayerId)
     {
@@ -49,7 +50,7 @@ namespace FFXIVAccess
             if (!npcChannels.ContainsKey(t.ObjectId))
             {
               Channel channelNPC;
-              channelNPC = System.PlaySound(s1.Value, paused: false);
+              channelNPC = System.PlaySound(EnnemySound.Value, paused: false);
               npcChannels[t.ObjectId] = channelNPC;
             }
           }
@@ -64,6 +65,12 @@ namespace FFXIVAccess
           npcChannels[t.ObjectId].Set3DAttributes(t.Position, default, default);
         }
       }
+    }
+    public void playFollowMe(Vector3 position)
+    {
+      Channel channelFollowMe;
+      channelFollowMe= System.PlaySound(FollowMeSound.Value, paused: false);
+      channelFollowMe.Set3DAttributes(position, default, default);
     }
   }
 }
