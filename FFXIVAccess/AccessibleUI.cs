@@ -40,7 +40,7 @@ namespace FFXIVAccess
       { "_TitleMenu", typeof(AddonSelectString) },
       { "_CharaSelectListMenu", typeof(AddonSelectString) },
       { "SelectOk", typeof(AddonSelectString) },
-  };
+    };
 
     private void onQuestToast(ref SeString message, ref QuestToastOptions options, ref bool isHandled)
     {
@@ -142,7 +142,7 @@ namespace FFXIVAccess
     {
       if (node != null)
         ScreenReader.Output($"change {node.Value.Type.ToString()} {node.Value.NodeID.ToString()}");
-      if (node.HasValue && node.Value.Type==NodeType.Text)
+      if (node.HasValue && node.Value.Type == NodeType.Text)
       {
         var text = Dalamud.Memory.MemoryHelper.ReadSeStringNullTerminated((IntPtr)node.Value.GetAsAtkTextNode()->GetText());
         ScreenReader.Output(text.TextValue);

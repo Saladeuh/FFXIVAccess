@@ -3,12 +3,10 @@ _TitleMenu
 CharaSelect
 _CharaSelectListMenu
 SelectOk
-AchievementInfo
-PlayGuide
 ConfigKeyBind
 Macro
 MacroTextCommandList
-ConigSystem
+ConfigSystem
 ConfigCharacter
 ConfigCaraOpeGeneral
 ConfigCaraOpeTarget

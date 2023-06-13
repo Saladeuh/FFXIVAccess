@@ -172,8 +172,8 @@ namespace FFXIVAccess
         }
         else if (tryingToMove())
         {
-          ScreenReader.Output($"{Util.ConvertOrientationToVector(clientState.LocalPlayer.Rotation)} " +
-            $"{position} {clientState.LocalPlayer.Rotation}");
+          //ScreenReader.Output($"w{Util.ConvertOrientationToVector(clientState.LocalPlayer.Rotation)} " +
+            //$"{position} {clientState.LocalPlayer.Rotation}");
           _banging = false;
         } else
         {
