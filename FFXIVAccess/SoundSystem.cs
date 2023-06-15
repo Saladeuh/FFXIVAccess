@@ -2,6 +2,8 @@ using Dalamud.Game.ClientState.Objects;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.Types;
 using FmodAudio;
+using FmodAudio.Base;
+using Lumina.Excel.GeneratedSheets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,10 +16,13 @@ namespace FFXIVAccess
   public class SoundSystem
   {
     public FmodSystem System { get; }
+    public Channel? channelFollowMe { get; set; }
+    public Vector3 FollowMePoint { get; set; }
+
     private Vector3 ListenerPos = new Vector3() { Z = -1.0f };
-    private Sound? EnnemySound, FollowMeSound, s3;
+    private Sound? EnnemySound, FollowMeSound, eventObjSound;
     public Vector3 Up = new Vector3(0, 1, 0), Forward = new Vector3(0, 0, -1);
-    public SortedDictionary<uint, Channel> npcChannels = new SortedDictionary<uint, Channel>();
+    public SortedDictionary<uint, Channel> objChannels = new SortedDictionary<uint, Channel>();
     public SoundSystem()
     {
       //Creates the FmodSystem object
@@ -37,6 +42,9 @@ namespace FFXIVAccess
 
       FollowMeSound = sound = System.CreateSound("followMe.wav", Mode._3D | Mode.Loop_Normal | Mode._3D_LinearSquareRolloff);
       sound.Set3DMinMaxDistance(min, 1000f);
+
+      eventObjSound = sound = System.CreateSound("eventObj.wav", Mode._3D | Mode.Loop_Normal | Mode._3D_LinearSquareRolloff);
+      sound.Set3DMinMaxDistance(min, 100f);
     }
     public void scanMapEnnemy(ObjectTable gameObjects, uint localPlayerId)
     {
@@ -47,30 +55,66 @@ namespace FFXIVAccess
           BattleNpc npcT = (BattleNpc)t;
           if (!t.IsDead && (BattleNpcSubKind)t.SubKind == BattleNpcSubKind.Enemy)
           {
-            if (!npcChannels.ContainsKey(t.ObjectId))
+            if (!objChannels.ContainsKey(t.ObjectId))
             {
               Channel channelNPC;
               channelNPC = System.PlaySound(EnnemySound.Value, paused: false);
-              npcChannels[t.ObjectId] = channelNPC;
+              objChannels[t.ObjectId] = channelNPC;
             }
           }
           else
           {
-            if (npcChannels.ContainsKey(t.ObjectId))
+            if (objChannels.ContainsKey(t.ObjectId))
             {
-              npcChannels[t.ObjectId].Paused = true;
-              npcChannels.Remove(t.ObjectId);
+              objChannels[t.ObjectId].Paused = true;
+              objChannels.Remove(t.ObjectId);
             }
           }
-          npcChannels[t.ObjectId].Set3DAttributes(t.Position, default, default);
+          objChannels[t.ObjectId].Set3DAttributes(t.Position, default, default);
+        }
+        else if ((t.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.EventObj || t.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.EventNpc) && t.ObjectId != localPlayerId)  
+        {
+          if (!t.IsDead)
+          {
+            if (!objChannels.ContainsKey(t.ObjectId))
+            {
+              Channel channelObj;
+              channelObj = System.PlaySound(eventObjSound.Value, paused: false);
+              objChannels[t.ObjectId] = channelObj;
+            }
+          }
+          else
+          {
+            if (objChannels.ContainsKey(t.ObjectId))
+            {
+              objChannels[t.ObjectId].Paused = true;
+              objChannels.Remove(t.ObjectId);
+            }
+          }
+          objChannels[t.ObjectId].Set3DAttributes(t.Position, default, default);
         }
       }
     }
     public void playFollowMe(Vector3 position)
     {
-      Channel channelFollowMe;
-      channelFollowMe= System.PlaySound(FollowMeSound.Value, paused: false);
-      channelFollowMe.Set3DAttributes(position, default, default);
+      if (channelFollowMe == null)
+      {
+        channelFollowMe = System.PlaySound(FollowMeSound.Value, paused: false);
+        channelFollowMe.Set3DAttributes(position, default, default);
+        channelFollowMe.Volume = 0.3f;
+        FollowMePoint = position;
+      }
+      else
+      {
+        channelFollowMe.Paused = false;
+      }
+    }
+    public void verifyFollowMe(Vector3 characterPos)
+    {
+      if (Vector3.Distance(characterPos, FollowMePoint) <= 10)
+      {
+        channelFollowMe.Paused = true;
+      }
     }
   }
 }

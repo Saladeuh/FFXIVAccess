@@ -18,6 +18,7 @@ using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
+using Dalamud.Plugin.Internal;
 using Dalamud.Utility;
 using DavyKager;
 using FFXIVAccess.Windows;
@@ -43,11 +44,14 @@ namespace FFXIVAccess
     public KeyState keyState { get; private set; }
     private ObjectTable gameObjects { get; init; }
     public GameGui gameGui { get; private set; }
+
+    
     public SeStringManager seStringManager { get; private set; }
     private TitleScreenMenu titleScreenMenu { get; set; }
     public ClientState clientState { get; private set; }
     private ToastGui toastGui { get; set; }
     public QuestManager questManager = null!;
+    public TargetManager targetManager = null;
     public Configuration Configuration { get; init; }
     public WindowSystem WindowSystem = new("SamplePlugin");
     [PluginService] public static ChatGui Chat { get; set; } = null!;
@@ -70,11 +74,10 @@ namespace FFXIVAccess
       ToastGui toastGui,
       TitleScreenMenu titleScreenMenu,
       ObjectTable gameObjects,
-      DataManager dataManager
-      )
+      DataManager dataManager,
+      TargetManager targetManager)
     {
       ScreenReader.Load(this.Name, this.Version);
-      soundSystem= new SoundSystem();
       Tolk.Output("Screen Reader ready");
       // Mappy services
       PluginInterface = pluginInterface;
@@ -88,6 +91,7 @@ namespace FFXIVAccess
       this.clientState= clientState;
       this.gameObjects = gameObjects;
       this.gameGui = gameGui;
+      this.targetManager = targetManager;
       this.questManager= new QuestManager();
       this.toastGui = toastGui;
       Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
@@ -124,6 +128,7 @@ namespace FFXIVAccess
 
       PluginInterface.UiBuilder.Draw += DrawUI;
       PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
+      soundSystem = new SoundSystem();
     }
 
     private nint FocusedAddon = nint.Zero;
@@ -172,7 +177,7 @@ namespace FFXIVAccess
         }
         else if (tryingToMove())
         {
-          ScreenReader.Output($"{clientState.LocalPlayer.Rotation}");
+          //ScreenReader.Output($"{clientState.LocalPlayer.Rotation}");
           _banging = false;
         } else
         {
@@ -193,6 +198,7 @@ namespace FFXIVAccess
       var rotation = this.clientState.LocalPlayer.Rotation;
       soundSystem.System.Set3DListenerAttributes(0, clientState.LocalPlayer.Position, default, Util.ConvertOrientationToVector(rotation), soundSystem.Up);
       soundSystem.scanMapEnnemy(this.gameObjects, clientState.LocalPlayer.ObjectId);
+      soundSystem.verifyFollowMe(_lastPosition);
       soundSystem.System.Update();
     }
     /*
