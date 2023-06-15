@@ -1,8 +1,10 @@
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.Types;
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FmodAudio;
 using FmodAudio.Base;
+using FmodAudio.DigitalSignalProcessing;
 using Lumina.Excel.GeneratedSheets;
 using System;
 using System.Collections.Generic;
@@ -44,7 +46,7 @@ namespace FFXIVAccess
       sound.Set3DMinMaxDistance(min, 1000f);
 
       eventObjSound = sound = System.CreateSound("eventObj.wav", Mode._3D | Mode.Loop_Normal | Mode._3D_LinearSquareRolloff);
-      sound.Set3DMinMaxDistance(min, 100f);
+      sound.Set3DMinMaxDistance(min, 40f);
     }
     public void scanMapEnnemy(ObjectTable gameObjects, uint localPlayerId)
     {
@@ -72,7 +74,7 @@ namespace FFXIVAccess
           }
           objChannels[t.ObjectId].Set3DAttributes(t.Position, default, default);
         }
-        else if ((t.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.EventObj || t.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.EventNpc) && t.ObjectId != localPlayerId)  
+        else if ((t.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.EventObj || t.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.EventNpc) && t.ObjectId != localPlayerId)
         {
           if (!t.IsDead)
           {
@@ -93,15 +95,37 @@ namespace FFXIVAccess
           }
           objChannels[t.ObjectId].Set3DAttributes(t.Position, default, default);
         }
+        else if (t.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Area)
+        {
+          if (!t.IsDead)
+          {
+            if (!objChannels.ContainsKey(t.ObjectId))
+            {
+              Channel channelObj;
+              channelObj = System.PlaySound(FollowMeSound.Value, paused: false);
+              objChannels[t.ObjectId] = channelObj;
+            }
+          }
+          else
+          {
+            if (objChannels.ContainsKey(t.ObjectId))
+            {
+              objChannels[t.ObjectId].Paused = true;
+              objChannels.Remove(t.ObjectId);
+            }
+          }
+          objChannels[t.ObjectId].Set3DAttributes(t.Position, default, default);
+        }
       }
     }
-    public void playFollowMe(Vector3 position)
+    public void playFollowMe(Vector3 position, float min, float max)
     {
       if (channelFollowMe == null)
       {
         channelFollowMe = System.PlaySound(FollowMeSound.Value, paused: false);
         channelFollowMe.Set3DAttributes(position, default, default);
-        channelFollowMe.Volume = 0.3f;
+        channelFollowMe.Volume = 1.0f;
+        channelFollowMe.Get3DMinMaxDistance(out min, out max);
         FollowMePoint = position;
       }
       else
@@ -111,9 +135,19 @@ namespace FFXIVAccess
     }
     public void verifyFollowMe(Vector3 characterPos)
     {
-      if (Vector3.Distance(characterPos, FollowMePoint) <= 10)
+      if (channelFollowMe != null)
       {
-        channelFollowMe.Paused = true;
+        float min;
+        float max;
+        channelFollowMe.Get3DMinMaxDistance(out min, out max);
+        if (Vector3.Distance(characterPos, FollowMePoint) <= min)
+        {
+          channelFollowMe.Paused = true;
+        }
+        else
+        {
+          channelFollowMe.Paused = false;
+        }
       }
     }
   }

@@ -195,10 +195,13 @@ namespace FFXIVAccess
           isHealed = true;
         }
       }
-      var rotation = this.clientState.LocalPlayer.Rotation;
-      soundSystem.System.Set3DListenerAttributes(0, clientState.LocalPlayer.Position, default, Util.ConvertOrientationToVector(rotation), soundSystem.Up);
-      soundSystem.scanMapEnnemy(this.gameObjects, clientState.LocalPlayer.ObjectId);
-      soundSystem.verifyFollowMe(_lastPosition);
+      if (this.clientState.LocalPlayer != null)
+      {
+        var rotation = this.clientState.LocalPlayer.Rotation;
+        soundSystem.System.Set3DListenerAttributes(0, clientState.LocalPlayer.Position, default, Util.ConvertOrientationToVector(rotation), soundSystem.Up);
+        soundSystem.scanMapEnnemy(this.gameObjects, clientState.LocalPlayer.ObjectId);
+        soundSystem.verifyFollowMe(_lastPosition);
+      }
       soundSystem.System.Update();
     }
     /*

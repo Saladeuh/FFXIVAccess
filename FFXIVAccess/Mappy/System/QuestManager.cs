@@ -58,7 +58,7 @@ public class QuestManager
                 in activeIndexes
             from index
                 in Enumerable.Range(0, 8)
-            //where !quest.TodoMask[index]
+            where !quest.TodoMask[index]
             select luminaData.ToDoLocation[activeIndex, index].Row
                 into targetRow
             where targetRow != 0
@@ -73,7 +73,7 @@ public class QuestManager
   {
     var luminaData = Plugin.questList.GetRow(quest.QuestID + 65536u);
     return Enumerable.Range(0, 24)
-      //.Where(index => luminaData.ToDoCompleteSeq[index] == quest.CurrentSequenceNumber)
+      .Where(index => luminaData.ToDoCompleteSeq[index] == quest.CurrentSequenceNumber)
       .ToList();
   }
 }

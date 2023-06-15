@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Linq;
 using Dalamud.Game.ClientState.Objects;
+using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Common.Math;
 using Lumina.Data.Parsing.Scd;
@@ -41,17 +42,17 @@ namespace FFXIVAccess
                   if (currentMapId == levelPlace)
                   {
                     var levelVector = new System.Numerics.Vector3(level.X, level.Y, level.Z);
-                    soundSystem.playFollowMe(levelVector);
+                    soundSystem.playFollowMe(levelVector, level.Radius, 1000f);
                     //var levelObjName=dataManager.GetExcelSheet<EObjName>().GetRow(level.Object);
                     var levelObj = gameObjects.FirstOrDefault(o => (Vector3.Distance(o.Position, levelVector) <= 20));
                     if (levelObj != null)
                     {
-                        targetManager.SetTarget(levelObj);
+                      targetManager.SetTarget(levelObj);
                     }
                     var characPosition = (FFXIVClientStructs.FFXIV.Common.Math.Vector3)clientState.LocalPlayer.Position;
                     var path = (Vector3)levelVector - characPosition;
                     text2 += $"{level.RowId}, {level.Object}, {level.Radius} {Vector3.Distance(characPosition, levelVector)} ";
-                      //$": {Vector3.Distance(characPosition, levelVector)}";
+                    //$": {Vector3.Distance(characPosition, levelVector)}";
                     float directionAngle;
                     if (path.X > 0)
                     {
@@ -121,11 +122,9 @@ namespace FFXIVAccess
     }
     private unsafe void OnCommand(string command, string args)
     {
-      ScreenReader.Output(Directory.GetCurrentDirectory());
-      Random rnd = new Random();
-      uint id = (uint)rnd.Next(10, 500);
-      ScreenReader.Output($"{id}");
-      UIModule.PlaySound(id, 0, 0, 0);
+      if(soundSystem.channelFollowMe.Volume>0)
+      soundSystem.channelFollowMe.Volume = 0f;
+      else soundSystem.channelFollowMe.Volume = 1f;
     }
   }
 }
