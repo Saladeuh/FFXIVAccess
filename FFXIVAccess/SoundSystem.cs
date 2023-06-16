@@ -118,22 +118,17 @@ namespace FFXIVAccess
         }
       }
     }
-    public void playFollowMe(Vector3 position, float min, float max)
+    public void updateFollowMe(Vector3 position, float min, float max)
     {
       if (channelFollowMe == null)
       {
-        channelFollowMe = System.PlaySound(FollowMeSound.Value, paused: false);
-        channelFollowMe.Set3DAttributes(position, default, default);
-        channelFollowMe.Volume = 1.0f;
-        channelFollowMe.Get3DMinMaxDistance(out min, out max);
-        FollowMePoint = position;
+        channelFollowMe = System.PlaySound(FollowMeSound.Value, paused: true);
       }
-      else
-      {
-        channelFollowMe.Paused = false;
-      }
+      channelFollowMe.Set3DAttributes(position, default, default);
+      channelFollowMe.Set3DMinMaxDistance(min, max);
+      FollowMePoint = position;
     }
-    public void verifyFollowMe(Vector3 characterPos)
+    public void setFollowMePlayingState(Vector3 characterPos)
     {
       if (channelFollowMe != null)
       {

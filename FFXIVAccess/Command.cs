@@ -42,7 +42,7 @@ namespace FFXIVAccess
                   if (currentMapId == levelPlace)
                   {
                     var levelVector = new System.Numerics.Vector3(level.X, level.Y, level.Z);
-                    soundSystem.playFollowMe(levelVector, level.Radius, 1000f);
+                    soundSystem.updateFollowMe(levelVector, level.Radius, 1000f);
                     targetLevelObj(level, levelVector);
 
                     var characPosition = (FFXIVClientStructs.FFXIV.Common.Math.Vector3)clientState.LocalPlayer.Position;
@@ -129,7 +129,7 @@ namespace FFXIVAccess
       {
         if (o.Name.TextValue.ToLower().Contains(args.ToLower()))
         {
-          soundSystem.playFollowMe(o.Position, 3f, 300f);
+          soundSystem.updateFollowMe(o.Position, 3f, 300f);
           targetManager.SetTarget(o);
           ScreenReader.Output(o.Name.ToString());
         }

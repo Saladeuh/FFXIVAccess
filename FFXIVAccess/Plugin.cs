@@ -28,6 +28,7 @@ using FFXIVClientStructs.FFXIV.Component.GUI;
 using Lumina.Excel.GeneratedSheets;
 using Mappy;
 using Mappy.System;
+using Microsoft.VisualBasic;
 
 namespace FFXIVAccess
 {
@@ -45,7 +46,7 @@ namespace FFXIVAccess
     private ObjectTable gameObjects { get; init; }
     public GameGui gameGui { get; private set; }
 
-    
+
     public SeStringManager seStringManager { get; private set; }
     private TitleScreenMenu titleScreenMenu { get; set; }
     public ClientState clientState { get; private set; }
@@ -77,8 +78,10 @@ namespace FFXIVAccess
       DataManager dataManager,
       TargetManager targetManager)
     {
+      //if (this.PluginInterface.Reason == PluginLoadReason.Reload)
       ScreenReader.Load(this.Name, this.Version);
-      Tolk.Output("Screen Reader ready");
+
+      ScreenReader.Output("Screen Reader ready");
       // Mappy services
       PluginInterface = pluginInterface;
       pluginInterface.Create<Service>();
@@ -88,11 +91,11 @@ namespace FFXIVAccess
       Service.MapManager = new MapManager();
       CommandManager = commandManager;
       this.titleScreenMenu = titleScreenMenu;
-      this.clientState= clientState;
+      this.clientState = clientState;
       this.gameObjects = gameObjects;
       this.gameGui = gameGui;
       this.targetManager = targetManager;
-      this.questManager= new QuestManager();
+      this.questManager = new QuestManager();
       this.toastGui = toastGui;
       Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
       Configuration.Initialize(PluginInterface);
@@ -163,7 +166,7 @@ namespace FFXIVAccess
       }
       _lastFocusedNode = *focusedNode;
       */
-        if (clientState.LocalPlayer != null)
+      if (clientState.LocalPlayer != null)
       {
         var position = clientState.LocalPlayer.Position;
         if (position == _lastPosition && tryingToMove())
@@ -183,7 +186,8 @@ namespace FFXIVAccess
         {
           //ScreenReader.Output($"{clientState.LocalPlayer.Rotation}");
           _banging = false;
-        } else
+        }
+        else
         {
           _banging = false;
         }
@@ -204,7 +208,7 @@ namespace FFXIVAccess
         var rotation = this.clientState.LocalPlayer.Rotation;
         soundSystem.System.Set3DListenerAttributes(0, clientState.LocalPlayer.Position, default, Util.ConvertOrientationToVector(rotation), soundSystem.Up);
         soundSystem.scanMapEnnemy(this.gameObjects, clientState.LocalPlayer.ObjectId);
-        soundSystem.verifyFollowMe(_lastPosition);
+        soundSystem.setFollowMePlayingState(_lastPosition);
       }
       soundSystem.System.Update();
     }
