@@ -150,5 +150,13 @@ namespace FFXIVAccess
         }
       }
     }
+
+    public void togleFollowMe()
+    {
+      if (channelFollowMe.Volume > 0)
+        channelFollowMe.Volume = 0f;
+      else channelFollowMe.Volume = 1f;
+
+    }
   }
 }

@@ -43,12 +43,8 @@ namespace FFXIVAccess
                   {
                     var levelVector = new System.Numerics.Vector3(level.X, level.Y, level.Z);
                     soundSystem.playFollowMe(levelVector, level.Radius, 1000f);
-                    //var levelObjName=dataManager.GetExcelSheet<EObjName>().GetRow(level.Object);
-                    var levelObj = gameObjects.FirstOrDefault(o => (Vector3.Distance(o.Position, levelVector) <= 20));
-                    if (levelObj != null)
-                    {
-                      targetManager.SetTarget(levelObj);
-                    }
+                    targetLevelObj(level, levelVector);
+
                     var characPosition = (FFXIVClientStructs.FFXIV.Common.Math.Vector3)clientState.LocalPlayer.Position;
                     var path = (Vector3)levelVector - characPosition;
                     text2 += $"{level.RowId}, {level.Object}, {level.Radius} {Vector3.Distance(characPosition, levelVector)} ";
@@ -83,6 +79,7 @@ namespace FFXIVAccess
                     ScreenReader.Output(text);
                     ScreenReader.Output(text2);
                   }
+
                 }
               }
             }
@@ -90,6 +87,8 @@ namespace FFXIVAccess
         }
       }
     }
+
+    
     private unsafe void OnQuestCommand(string command, string args)
     {
       // send all quests and details
@@ -120,11 +119,21 @@ namespace FFXIVAccess
         }
       }
     }
+    private unsafe void OnToggleFollowMe(string command, string args)
+    {
+      soundSystem.togleFollowMe();
+    } 
     private unsafe void OnCommand(string command, string args)
     {
-      if(soundSystem.channelFollowMe.Volume>0)
-      soundSystem.channelFollowMe.Volume = 0f;
-      else soundSystem.channelFollowMe.Volume = 1f;
+      foreach (var o in gameObjects)
+      {
+        if (o.Name.TextValue.ToLower().Contains(args.ToLower()))
+        {
+          soundSystem.playFollowMe(o.Position, 3f, 300f);
+          targetManager.SetTarget(o);
+          ScreenReader.Output(o.Name.ToString());
+        }
+      }
     }
   }
 }

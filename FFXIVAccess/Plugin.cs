@@ -117,6 +117,10 @@ namespace FFXIVAccess
       {
         HelpMessage = "A useful message to display in /xlhelp"
       });
+      CommandManager.AddHandler("/tfm", new CommandInfo(OnToggleFollowMe)
+      {
+        HelpMessage = "Toggle the follow me sound"
+      });
       CommandManager.AddHandler("/quest", new CommandInfo(OnQuestCommand)
       {
         HelpMessage = "A useful message to display in /xlhelp"
@@ -237,6 +241,8 @@ namespace FFXIVAccess
       CommandManager.RemoveHandler("/test");
       CommandManager.RemoveHandler("/quest");
       ScreenReader.Unload();
+
+      soundSystem.System.Dispose();
     }
 
     private void DrawUI()
