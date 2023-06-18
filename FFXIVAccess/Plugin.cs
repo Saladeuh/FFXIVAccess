@@ -106,6 +106,7 @@ namespace FFXIVAccess
       contextMenu.OnOpenGameObjectContextMenu += OpenGameObjectContextMenu;
       contextMenu.OnOpenInventoryContextMenu += OpenInventory;
       framework.Update += OnFrameworkUpdate;
+      clientState.TerritoryChanged += onTerritoryChanged;
       flyTextGui.FlyTextCreated += onFlyTextCreated;
       gameGui.HoveredActionChanged += onHoveredActionChanged;
       gameGui.HoveredItemChanged += onHoveredItemChange;
@@ -136,6 +137,12 @@ namespace FFXIVAccess
       PluginInterface.UiBuilder.Draw += DrawUI;
       PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
       soundSystem = new SoundSystem();
+    }
+
+    private void onTerritoryChanged(object? sender, ushort e)
+    {
+      ScreenReader.Output(soundSystem.objChannels.Count().ToString());
+      soundSystem.cleanObjChannel();
     }
 
     private nint FocusedAddon = nint.Zero;
@@ -193,7 +200,7 @@ namespace FFXIVAccess
         }
         _lastPosition = position;
         float percHP = (clientState.LocalPlayer.CurrentHp / clientState.LocalPlayer.MaxHp * 100);
-        if (percHP <= 98 && isHealed)
+        if (percHP <= 50 && isHealed)
         {
           UIModule.PlayChatSoundEffect(11);
           isHealed = false;
@@ -207,8 +214,8 @@ namespace FFXIVAccess
       {
         var rotation = this.clientState.LocalPlayer.Rotation;
         soundSystem.System.Set3DListenerAttributes(0, clientState.LocalPlayer.Position, default, Util.ConvertOrientationToVector(rotation), soundSystem.Up);
-        soundSystem.scanMapEnnemy(this.gameObjects, clientState.LocalPlayer.ObjectId);
-        soundSystem.setFollowMePlayingState(_lastPosition);
+        soundSystem.scanMapEnnemy(this.gameObjects, clientState.LocalPlayer);
+        soundSystem.setFollowMePlayingState(ref _lastPosition);
       }
       soundSystem.System.Update();
     }
@@ -244,9 +251,8 @@ namespace FFXIVAccess
 
       CommandManager.RemoveHandler("/test");
       CommandManager.RemoveHandler("/quest");
+      soundSystem.System.Release();
       ScreenReader.Unload();
-
-      soundSystem.System.Dispose();
     }
 
     private void DrawUI()

@@ -46,7 +46,7 @@ namespace FFXIVAccess
                     targetLevelObj(level, levelVector);
 
                     var characPosition = (FFXIVClientStructs.FFXIV.Common.Math.Vector3)clientState.LocalPlayer.Position;
-                    var path = (Vector3)levelVector - characPosition;
+                      var path = (Vector3)levelVector - characPosition;
                     text2 += $"{level.RowId}, {level.Object}, {level.Radius} {Vector3.Distance(characPosition, levelVector)} ";
                     //$": {Vector3.Distance(characPosition, levelVector)}";
                     float directionAngle;
