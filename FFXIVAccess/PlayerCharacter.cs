@@ -5,6 +5,7 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using Dalamud.Game.ClientState.Keys;
+using FFXIVClientStructs.FFXIV.Common.Component.BGCollision;
 using Lumina.Excel.GeneratedSheets;
 
 namespace FFXIVAccess
@@ -34,6 +35,12 @@ namespace FFXIVAccess
           targetManager.SetTarget(levelObj);
         }
       }
+    }
+    private void rayToward()
+    {
+      RaycastHit hit;
+      BGCollisionModule.Raycast(clientState.LocalPlayer.Position, Util.ConvertOrientationToVector(clientState.LocalPlayer.Rotation), out hit);
+      ScreenReader.Output($"p{hit.Point.ToString()} d{hit.Distance} f{hit.Flags}");
     }
   }
 }
