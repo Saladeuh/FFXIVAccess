@@ -194,7 +194,6 @@ namespace FFXIVAccess
         else if (tryingToMove())
         {
           //ScreenReader.Output($"{clientState.LocalPlayer.Rotation}");
-         rayToward();
           _banging = false;
         }
         else

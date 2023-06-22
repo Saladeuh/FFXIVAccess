@@ -41,7 +41,7 @@ namespace FFXIVAccess
         }
       }
     }
-    private void rayToward()
+    private void rayArrund()
     {
       RaycastHit hit;
       foreach (Vector3 orientation in rayOrientations)

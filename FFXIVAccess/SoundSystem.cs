@@ -24,7 +24,6 @@ namespace FFXIVAccess
 
     private Vector3 ListenerPos = new Vector3() { Z = -1.0f };
     public Sound? EnnemySound, FollowMeSound, eventObjSound;
-    public Dsp DspWall;
     public Vector3 Up = new Vector3(0, 1, 0), Forward = new Vector3(0, 0, -1);
     public Dictionary<uint, Channel> objChannels = new Dictionary<uint, Channel>();
     public SoundSystem()
@@ -51,10 +50,6 @@ namespace FFXIVAccess
       sound.Set3DMinMaxDistance(min, 40f);
       channelWall = System.PlaySound(eventObjSound.Value, paused: true);
 
-      DspWall = System.CreateDSPByType(DSPType.Oscillator);
-      DspWall.SetParameterFloat(1, 39f); // hz
-      DspWall.SetParameterInt(0, 1); // square
-      channelWall = System.PlayDsp(DspWall);
       channelWall.Set3DMinMaxDistance(0f, 10f);
     }
     public void scanMapEnnemy(ObjectTable gameObjects, Character localPlayer)
