@@ -116,7 +116,9 @@ namespace FFXIVAccess
       toastGui.QuestToast += onQuestToast;
       NewAddonOpenedEvent += onSelectString;
       //NodeFocusChangedEvent += onNodeFocusChanged;
-      ConfigWindow = new ConfigWindow(this);
+      int sizeArray = 1000;
+      collisions = new Dictionary<System.Numerics.Vector3, bool>();
+        ConfigWindow = new ConfigWindow(this);
       CommandManager.AddHandler("/test", new CommandInfo(OnCommand)
       {
         HelpMessage = "A useful message to display in /xlhelp"
@@ -192,6 +194,7 @@ namespace FFXIVAccess
         else if (tryingToMove())
         {
           //ScreenReader.Output($"{clientState.LocalPlayer.Rotation}");
+         rayToward();
           _banging = false;
         }
         else
@@ -247,8 +250,6 @@ namespace FFXIVAccess
       WindowSystem.RemoveAllWindows();
 
       ConfigWindow.Dispose();
-      MainWindow.Dispose();
-
       CommandManager.RemoveHandler("/test");
       CommandManager.RemoveHandler("/quest");
       soundSystem.System.Release();

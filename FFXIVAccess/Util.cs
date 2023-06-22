@@ -50,5 +50,13 @@ namespace FFXIVAccess
       z = (float)Math.Cos(angle);
       return new Vector3((float)x, 0, (float)z);
     }
+    public static Vector3 RoundVector3(Vector3 vector, int round)
+    {
+      float roundedX = float.Round(vector.X, round);
+      float roundedY =float.Round(vector.Y, round);
+      float roundedZ = float.Round(vector.Z, round);
+
+      return new Vector3(roundedX, roundedY, roundedZ);
+    }
   }
 }

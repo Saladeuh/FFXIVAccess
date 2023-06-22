@@ -5,6 +5,7 @@ using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FmodAudio;
 using FmodAudio.Base;
 using FmodAudio.DigitalSignalProcessing;
+using FmodAudio.DigitalSignalProcessing.Effects;
 using Lumina.Excel.GeneratedSheets;
 using System;
 using System.Collections.Generic;
@@ -18,11 +19,12 @@ namespace FFXIVAccess
   public class SoundSystem
   {
     public FmodSystem System { get; }
-    public Channel? channelFollowMe { get; set; }
+    public Channel? channelFollowMe, channelWall;
     public Vector3 FollowMePoint { get; set; }
 
     private Vector3 ListenerPos = new Vector3() { Z = -1.0f };
-    private Sound? EnnemySound, FollowMeSound, eventObjSound;
+    public Sound? EnnemySound, FollowMeSound, eventObjSound;
+    public Dsp DspWall;
     public Vector3 Up = new Vector3(0, 1, 0), Forward = new Vector3(0, 0, -1);
     public Dictionary<uint, Channel> objChannels = new Dictionary<uint, Channel>();
     public SoundSystem()
@@ -47,6 +49,13 @@ namespace FFXIVAccess
 
       eventObjSound = sound = System.CreateSound("eventObj.wav", Mode._3D | Mode.Loop_Normal | Mode._3D_LinearSquareRolloff);
       sound.Set3DMinMaxDistance(min, 40f);
+      channelWall = System.PlaySound(eventObjSound.Value, paused: true);
+
+      DspWall = System.CreateDSPByType(DSPType.Oscillator);
+      DspWall.SetParameterFloat(1, 39f); // hz
+      DspWall.SetParameterInt(0, 1); // square
+      channelWall = System.PlayDsp(DspWall);
+      channelWall.Set3DMinMaxDistance(0f, 10f);
     }
     public void scanMapEnnemy(ObjectTable gameObjects, Character localPlayer)
     {
