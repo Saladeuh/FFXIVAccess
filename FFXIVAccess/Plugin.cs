@@ -1,14 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using Dalamud.ContextMenu;
 using Dalamud.Data;
 using Dalamud.Game;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.ClientState.Keys;
 using Dalamud.Game.ClientState.Objects;
-using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.Command;
 using Dalamud.Game.Gui;
 using Dalamud.Game.Gui.FlyText;
@@ -18,17 +16,13 @@ using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
-using Dalamud.Plugin.Internal;
-using Dalamud.Utility;
-using DavyKager;
 using FFXIVAccess.Windows;
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.UI;
-using FFXIVClientStructs.FFXIV.Common.Math;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using Lumina.Excel.GeneratedSheets;
 using Mappy;
 using Mappy.System;
-using Microsoft.VisualBasic;
 
 namespace FFXIVAccess
 {
@@ -216,10 +210,14 @@ namespace FFXIVAccess
       {
         var rotation = this.clientState.LocalPlayer.Rotation;
         soundSystem.System.Set3DListenerAttributes(0, clientState.LocalPlayer.Position, default, Util.ConvertOrientationToVector(rotation), soundSystem.Up);
-        soundSystem.scanMapEnnemy(this.gameObjects, clientState.LocalPlayer);
+        soundSystem.scanMapObject(this.gameObjects, clientState.LocalPlayer, Service.MapManager.LoadedMapId);
         soundSystem.setFollowMePlayingState(ref _lastPosition);
       }
       soundSystem.System.Update();
+      if (keyState[VirtualKey.G])
+      {
+        ScreenReader.Output(soundSystem.Tracks[Service.MapManager.LoadedMapId].Count().ToString());
+      }
     }
     /*
   private void onChat(XivChatType type, uint senderId, ref SeString sender, ref SeString message, ref bool isHandled)

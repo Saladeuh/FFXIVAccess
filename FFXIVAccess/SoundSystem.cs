@@ -23,9 +23,10 @@ namespace FFXIVAccess
     public Vector3 FollowMePoint { get; set; }
 
     private Vector3 ListenerPos = new Vector3() { Z = -1.0f };
-    public Sound? EnnemySound, FollowMeSound, eventObjSound;
+    public Sound? EnnemySound, FollowMeSound, EventObjSound, TrackSound;
     public Vector3 Up = new Vector3(0, 1, 0), Forward = new Vector3(0, 0, -1);
     public Dictionary<uint, Channel> objChannels = new Dictionary<uint, Channel>();
+    public Dictionary<uint, HashSet<Vector3>> Tracks= new Dictionary<uint, HashSet<Vector3>>();
     public SoundSystem()
     {
       //Creates the FmodSystem object
@@ -46,63 +47,78 @@ namespace FFXIVAccess
       FollowMeSound = sound = System.CreateSound("followMe.wav", Mode._3D | Mode.Loop_Normal | Mode._3D_LinearSquareRolloff);
       sound.Set3DMinMaxDistance(min, 1000f);
 
-      eventObjSound = sound = System.CreateSound("eventObj.wav", Mode._3D | Mode.Loop_Normal | Mode._3D_LinearSquareRolloff);
+      EventObjSound = sound = System.CreateSound("eventObj.wav", Mode._3D | Mode.Loop_Normal | Mode._3D_LinearSquareRolloff);
       sound.Set3DMinMaxDistance(min, 40f);
-      channelWall = System.PlaySound(eventObjSound.Value, paused: true);
-
+      channelWall = System.PlaySound(EventObjSound.Value, paused: true);
       channelWall.Set3DMinMaxDistance(0f, 10f);
+
+      TrackSound = sound = System.CreateSound("track.wav", Mode._3D | Mode.Loop_Normal | Mode._3D_LinearSquareRolloff);
+      sound.Set3DMinMaxDistance(0f, 20f);
+
     }
-    public void scanMapEnnemy(ObjectTable gameObjects, Character localPlayer)
+    public bool playTracksSound = false;
+    public void scanMapObject(ObjectTable gameObjects, Character localPlayer, uint mapId)
     {
       foreach (GameObject t in gameObjects)
       {
-        if (t.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc && t.ObjectId != localPlayer.ObjectId)
+        associateSoundToObjects(ref localPlayer, t);
+        if ((!t.IsDead) && Vector3.Distance(t.Position, localPlayer.Position) <= 200)
         {
-          BattleNpc npcT = (BattleNpc)t;
-          if ((!t.IsDead) && (BattleNpcSubKind)t.SubKind == BattleNpcSubKind.Enemy && Vector3.Distance(t.Position, localPlayer.Position) <= 200)
-          {
-            if (!objChannels.ContainsKey(t.ObjectId))
-            {
-              Channel channelNPC;
-              channelNPC = System.PlaySound(EnnemySound.Value, paused: false);
-              objChannels[t.ObjectId] = channelNPC;
-            }
-            objChannels[t.ObjectId].Set3DAttributes(t.Position, default, default);
-          }
-          else
-          {
-            if (objChannels.ContainsKey(t.ObjectId))
-            {
-              objChannels[t.ObjectId].Stop();
-              objChannels.Remove(t.ObjectId);
-            }
-          }
+          Tracks.TryAdd(mapId, new HashSet<Vector3>());
+          Tracks[mapId].Add (Util.RoundVector3(t.Position, 1));
         }
-        /*
-        else if ((t.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.EventObj || t.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.EventNpc) && t.ObjectId != localPlayer.ObjectId)
-        {
-          if (!t.IsDead && Vector3.Distance(t.Position, localPlayer.Position) <= 200)
-          {
-            if (!objChannels.ContainsKey(t.ObjectId))
-            {
-              Channel channelObj;
-              channelObj = System.PlaySound(eventObjSound.Value, paused: false);
-              objChannels[t.ObjectId] = channelObj;
-            }
-            objChannels[t.ObjectId].Set3DAttributes(t.Position, default, default);
-          }
-          else
-          {
-            if (objChannels.ContainsKey(t.ObjectId))
-            {
-              objChannels[t.ObjectId].Stop();
-              objChannels.Remove(t.ObjectId);
-            }
-          }
-        }
-        */
       }
     }
+
+    private void associateSoundToObjects(ref Character localPlayer, GameObject t)
+    {
+      if (t.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc && t.ObjectId != localPlayer.ObjectId)
+      {
+        BattleNpc npcT = (BattleNpc)t;
+        if ((!t.IsDead) && (BattleNpcSubKind)t.SubKind == BattleNpcSubKind.Enemy && Vector3.Distance(t.Position, localPlayer.Position) <= 200)
+        {
+          if (!objChannels.ContainsKey(t.ObjectId))
+          {
+            Channel channelNPC;
+            channelNPC = System.PlaySound(EnnemySound.Value, paused: false);
+            objChannels[t.ObjectId] = channelNPC;
+          }
+          objChannels[t.ObjectId].Set3DAttributes(t.Position, default, default);
+        }
+        else
+        {
+          if (objChannels.ContainsKey(t.ObjectId))
+          {
+            objChannels[t.ObjectId].Stop();
+            objChannels.Remove(t.ObjectId);
+          }
+        }
+      }
+      /*
+      else if ((t.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.EventObj || t.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.EventNpc) && t.ObjectId != localPlayer.ObjectId)
+      {
+        if (!t.IsDead && Vector3.Distance(t.Position, localPlayer.Position) <= 200)
+        {
+          if (!objChannels.ContainsKey(t.ObjectId))
+          {
+            Channel channelObj;
+            channelObj = System.PlaySound(eventObjSound.Value, paused: false);
+            objChannels[t.ObjectId] = channelObj;
+          }
+          objChannels[t.ObjectId].Set3DAttributes(t.Position, default, default);
+        }
+        else
+        {
+          if (objChannels.ContainsKey(t.ObjectId))
+          {
+            objChannels[t.ObjectId].Stop();
+            objChannels.Remove(t.ObjectId);
+          }
+        }
+      }
+      */
+    }
+
     public void updateFollowMe(Vector3 position, float min, float max)
     {
       if (channelFollowMe == null)
