@@ -110,9 +110,9 @@ namespace FFXIVAccess
       toastGui.QuestToast += onQuestToast;
       NewAddonOpenedEvent += onSelectString;
       //NodeFocusChangedEvent += onNodeFocusChanged;
-      int sizeArray = 1000;
       collisions = new Dictionary<System.Numerics.Vector3, bool>();
-        ConfigWindow = new ConfigWindow(this);
+      ConfigWindow = new ConfigWindow(this);
+      soundSystem = new SoundSystem();
       CommandManager.AddHandler("/test", new CommandInfo(OnCommand)
       {
         HelpMessage = "A useful message to display in /xlhelp"
@@ -132,12 +132,11 @@ namespace FFXIVAccess
 
       PluginInterface.UiBuilder.Draw += DrawUI;
       PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
-      soundSystem = new SoundSystem();
     }
 
     private void onTerritoryChanged(object? sender, ushort e)
     {
-      ScreenReader.Output(soundSystem.objChannels.Count().ToString());
+      ScreenReader.Output(soundSystem.ObjChannels.Count().ToString());
       soundSystem.cleanObjChannel();
     }
 
@@ -206,18 +205,21 @@ namespace FFXIVAccess
           isHealed = true;
         }
       }
+      if (keyState[VirtualKey.G])
+      {
+        soundSystem.TrackMode = !soundSystem.TrackMode;
+        ScreenReader.Output(soundSystem.Tracks[Service.MapManager.LoadedMapId].Count().ToString());
+        keyState[VirtualKey.G] = false;
+      }
       if (this.clientState.LocalPlayer != null)
       {
         var rotation = this.clientState.LocalPlayer.Rotation;
         soundSystem.System.Set3DListenerAttributes(0, clientState.LocalPlayer.Position, default, Util.ConvertOrientationToVector(rotation), soundSystem.Up);
         soundSystem.scanMapObject(this.gameObjects, clientState.LocalPlayer, Service.MapManager.LoadedMapId);
         soundSystem.setFollowMePlayingState(ref _lastPosition);
+        soundSystem.updateTracksSounds(Service.MapManager.LoadedMapId, _lastPosition);
       }
       soundSystem.System.Update();
-      if (keyState[VirtualKey.G])
-      {
-        ScreenReader.Output(soundSystem.Tracks[Service.MapManager.LoadedMapId].Count().ToString());
-      }
     }
     /*
   private void onChat(XivChatType type, uint senderId, ref SeString sender, ref SeString message, ref bool isHandled)
@@ -250,6 +252,7 @@ namespace FFXIVAccess
       CommandManager.RemoveHandler("/test");
       CommandManager.RemoveHandler("/quest");
       soundSystem.System.Release();
+      soundSystem.System.Dispose();
       ScreenReader.Unload();
     }
 

@@ -25,8 +25,9 @@ namespace FFXIVAccess
     private Vector3 ListenerPos = new Vector3() { Z = -1.0f };
     public Sound? EnnemySound, FollowMeSound, EventObjSound, TrackSound;
     public Vector3 Up = new Vector3(0, 1, 0), Forward = new Vector3(0, 0, -1);
-    public Dictionary<uint, Channel> objChannels = new Dictionary<uint, Channel>();
-    public Dictionary<uint, HashSet<Vector3>> Tracks= new Dictionary<uint, HashSet<Vector3>>();
+    public Dictionary<uint, Channel> ObjChannels = new Dictionary<uint, Channel>();
+    public Dictionary<Vector3, Channel> TracksChannels = new Dictionary<Vector3, Channel>();
+    public Dictionary<uint, HashSet<Vector3>> Tracks = new Dictionary<uint, HashSet<Vector3>>();
     public SoundSystem()
     {
       //Creates the FmodSystem object
@@ -54,22 +55,24 @@ namespace FFXIVAccess
 
       TrackSound = sound = System.CreateSound("track.wav", Mode._3D | Mode.Loop_Normal | Mode._3D_LinearSquareRolloff);
       sound.Set3DMinMaxDistance(0f, 20f);
-
     }
-    public bool playTracksSound = false;
+    public bool TrackMode = false;
     public void scanMapObject(ObjectTable gameObjects, Character localPlayer, uint mapId)
     {
       foreach (GameObject t in gameObjects)
       {
         associateSoundToObjects(ref localPlayer, t);
-        if ((!t.IsDead) && Vector3.Distance(t.Position, localPlayer.Position) <= 200)
+        // Add objects positions to save where it's possible to wallk
+        if ((!t.IsDead) && t.ObjectId != localPlayer.ObjectId && t.ObjectKind == ObjectKind.Player && Vector3.Distance(t.Position, localPlayer.Position) <= 200)
         {
           Tracks.TryAdd(mapId, new HashSet<Vector3>());
-          Tracks[mapId].Add (Util.RoundVector3(t.Position, 1));
+          //if (Tracks[mapId].All(tr => Vector3.Distance(tr, t.Position) >= 3))
+          //{
+            Tracks[mapId].Add(Util.RoundVector3(t.Position, 0));
+          //}
         }
       }
     }
-
     private void associateSoundToObjects(ref Character localPlayer, GameObject t)
     {
       if (t.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc && t.ObjectId != localPlayer.ObjectId)
@@ -77,20 +80,21 @@ namespace FFXIVAccess
         BattleNpc npcT = (BattleNpc)t;
         if ((!t.IsDead) && (BattleNpcSubKind)t.SubKind == BattleNpcSubKind.Enemy && Vector3.Distance(t.Position, localPlayer.Position) <= 200)
         {
-          if (!objChannels.ContainsKey(t.ObjectId))
+          if (!ObjChannels.ContainsKey(t.ObjectId))
+
           {
             Channel channelNPC;
             channelNPC = System.PlaySound(EnnemySound.Value, paused: false);
-            objChannels[t.ObjectId] = channelNPC;
+            ObjChannels[t.ObjectId] = channelNPC;
           }
-          objChannels[t.ObjectId].Set3DAttributes(t.Position, default, default);
+          ObjChannels[t.ObjectId].Set3DAttributes(t.Position, default, default);
         }
         else
         {
-          if (objChannels.ContainsKey(t.ObjectId))
+          if (ObjChannels.ContainsKey(t.ObjectId))
           {
-            objChannels[t.ObjectId].Stop();
-            objChannels.Remove(t.ObjectId);
+            ObjChannels[t.ObjectId].Stop();
+            ObjChannels.Remove(t.ObjectId);
           }
         }
       }
@@ -118,7 +122,46 @@ namespace FFXIVAccess
       }
       */
     }
-
+    public void updateTracksSounds(uint mapId, Vector3 playerPosition)
+    {
+      if (TrackMode)
+      {
+        foreach (Vector3 track in Tracks[mapId])
+        {
+          float distance = Vector3.Distance(track, playerPosition);
+          if (distance <= 20 && distance > 3)
+          {
+            if (!TracksChannels.ContainsKey(track))
+            {
+              Channel channelTrack;
+              channelTrack = System.PlaySound(TrackSound.Value, paused: false);
+              channelTrack.Volume = 0.2f;
+              channelTrack.Set3DAttributes(track, default, default);
+              TracksChannels[track] = channelTrack;
+            }
+          }
+          else
+          {
+            if (TracksChannels.ContainsKey(track))
+            {
+              TracksChannels[track].Stop();
+              TracksChannels.Remove(track);
+            }
+          }
+        }
+      }
+      else
+      {
+        foreach (Channel channel in TracksChannels.Values)
+        {
+          if (channel != null && channel.IsPlaying)
+          {
+            channel.Stop();
+          }
+        }
+        TracksChannels.Clear();
+      }
+    }
     public void updateFollowMe(Vector3 position, float min, float max)
     {
       if (channelFollowMe == null)
@@ -148,11 +191,11 @@ namespace FFXIVAccess
     }
     public void cleanObjChannel()
     {
-      foreach (var t in objChannels.Values)
+      foreach (var t in ObjChannels.Values)
       {
         t.Stop();
       }
-      objChannels.Clear();
+      ObjChannels.Clear();
     }
     public void togleFollowMe()
     {
