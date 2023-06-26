@@ -72,9 +72,6 @@ namespace FFXIVAccess
       DataManager dataManager,
       TargetManager targetManager)
     {
-      //if (this.PluginInterface.Reason == PluginLoadReason.Reload)
-      ScreenReader.Load(this.Name, this.Version);
-
       ScreenReader.Output("Screen Reader ready");
       // Mappy services
       PluginInterface = pluginInterface;
@@ -110,12 +107,15 @@ namespace FFXIVAccess
       toastGui.QuestToast += onQuestToast;
       NewAddonOpenedEvent += onSelectString;
       //NodeFocusChangedEvent += onNodeFocusChanged;
-      collisions = new Dictionary<System.Numerics.Vector3, bool>();
-      ConfigWindow = new ConfigWindow(this);
       soundSystem = new SoundSystem();
+      ConfigWindow = new ConfigWindow(this);
       CommandManager.AddHandler("/test", new CommandInfo(OnCommand)
       {
-        HelpMessage = "A useful message to display in /xlhelp"
+        HelpMessage = ""
+      });
+      CommandManager.AddHandler("/find", new CommandInfo(OnFind)
+      {
+        HelpMessage = "Find the specified object"
       });
       CommandManager.AddHandler("/tfm", new CommandInfo(OnToggleFollowMe)
       {
@@ -246,14 +246,16 @@ namespace FFXIVAccess
       */
     public void Dispose()
     {
-      WindowSystem.RemoveAllWindows();
-
-      ConfigWindow.Dispose();
-      CommandManager.RemoveHandler("/test");
-      CommandManager.RemoveHandler("/quest");
       soundSystem.System.Release();
       soundSystem.System.Dispose();
       ScreenReader.Unload();
+      //WindowSystem.RemoveAllWindows();
+      //ConfigWindow.Dispose();
+      CommandManager.RemoveHandler("/test");
+      CommandManager.RemoveHandler("/quest");
+      CommandManager.RemoveHandler("/find");
+      CommandManager.RemoveHandler("/tfm");
+      CommandManager.RemoveHandler("/currentmapquest");
     }
 
     private void DrawUI()

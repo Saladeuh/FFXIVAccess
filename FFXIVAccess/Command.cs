@@ -10,6 +10,7 @@ using Lumina.Data.Parsing.Scd;
 using Lumina.Excel.GeneratedSheets;
 using Mappy;
 using Mappy.Utilities;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace FFXIVAccess
 {
@@ -44,7 +45,7 @@ namespace FFXIVAccess
                     var levelVector = new System.Numerics.Vector3(level.X, level.Y, level.Z);
                     soundSystem.updateFollowMe(levelVector, level.Radius, 1000f);
                     targetLevelObj(level, levelVector);
-
+                   
                     var characPosition = (FFXIVClientStructs.FFXIV.Common.Math.Vector3)clientState.LocalPlayer.Position;
                       var path = (Vector3)levelVector - characPosition;
                     text2 += $"{level.RowId}, {level.Object}, {level.Radius} {Vector3.Distance(characPosition, levelVector)} ";
@@ -123,7 +124,7 @@ namespace FFXIVAccess
     {
       soundSystem.togleFollowMe();
     } 
-    private unsafe void OnCommand(string command, string args)
+    private unsafe void OnFind(string command, string args)
     {
       foreach (var o in gameObjects)
       {
@@ -134,6 +135,13 @@ namespace FFXIVAccess
           ScreenReader.Output(o.Name.ToString());
         }
       }
+    }
+    private unsafe void OnCommand(string command, string args)
+    {
+      var marker = dataManager;
+      //GetExcelSheet<MapMarker>().GetRow(3, 13);
+      //ScreenReader.Output($"PlaceName: {dataManager.GetExcelSheet<MapMarker>().GetRow(3, 13).PlaceNameSubtext.Value.Name.ToString()}"
+      //  );
     }
   }
 }
