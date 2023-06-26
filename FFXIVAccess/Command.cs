@@ -45,9 +45,9 @@ namespace FFXIVAccess
                     var levelVector = new System.Numerics.Vector3(level.X, level.Y, level.Z);
                     soundSystem.updateFollowMe(levelVector, level.Radius, 1000f);
                     targetLevelObj(level, levelVector);
-                   
+
                     var characPosition = (FFXIVClientStructs.FFXIV.Common.Math.Vector3)clientState.LocalPlayer.Position;
-                      var path = (Vector3)levelVector - characPosition;
+                    var path = (Vector3)levelVector - characPosition;
                     text2 += $"{level.RowId}, {level.Object}, {level.Radius} {Vector3.Distance(characPosition, levelVector)} ";
                     //$": {Vector3.Distance(characPosition, levelVector)}";
                     float directionAngle;
@@ -89,7 +89,7 @@ namespace FFXIVAccess
       }
     }
 
-    
+
     private unsafe void OnQuestCommand(string command, string args)
     {
       // send all quests and details
@@ -123,7 +123,7 @@ namespace FFXIVAccess
     private unsafe void OnToggleFollowMe(string command, string args)
     {
       soundSystem.togleFollowMe();
-    } 
+    }
     private unsafe void OnFind(string command, string args)
     {
       foreach (var o in gameObjects)
@@ -138,7 +138,8 @@ namespace FFXIVAccess
     }
     private unsafe void OnCommand(string command, string args)
     {
-      var marker = dataManager;
+      var marker = dataManager.GetExcelSheet<Quest>();
+      int a = 2;
       //GetExcelSheet<MapMarker>().GetRow(3, 13);
       //ScreenReader.Output($"PlaceName: {dataManager.GetExcelSheet<MapMarker>().GetRow(3, 13).PlaceNameSubtext.Value.Name.ToString()}"
       //  );

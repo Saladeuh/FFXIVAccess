@@ -35,6 +35,7 @@ namespace FFXIVAccess
     private DalamudPluginInterface PluginInterface { get; init; }
     private CommandManager CommandManager { get; init; }
     private DataManager dataManager { get; init; }
+    public Dalamud.Game.Framework framework { get; set; }
     private FlyTextGui flyTextGui { get; init; }
     public KeyState keyState { get; private set; }
     private ObjectTable gameObjects { get; init; }
@@ -72,6 +73,7 @@ namespace FFXIVAccess
       DataManager dataManager,
       TargetManager targetManager)
     {
+      ScreenReader.Load(pluginInterface.InternalName, Version);
       ScreenReader.Output("Screen Reader ready");
       // Mappy services
       PluginInterface = pluginInterface;
@@ -83,6 +85,7 @@ namespace FFXIVAccess
       CommandManager = commandManager;
       this.titleScreenMenu = titleScreenMenu;
       this.clientState = clientState;
+      this.framework = framework;
       this.gameObjects = gameObjects;
       this.gameGui = gameGui;
       this.targetManager = targetManager;
@@ -147,7 +150,7 @@ namespace FFXIVAccess
     private bool _banging = false;
     DateTime lastTime = DateTime.Now;
     bool isHealed = true;
-    public unsafe void OnFrameworkUpdate(Framework _)
+    public unsafe void OnFrameworkUpdate(Dalamud.Game.Framework _)
     {
       nint addonPtr = nint.Zero;
       foreach (var entry in addonDict)
@@ -246,8 +249,9 @@ namespace FFXIVAccess
       */
     public void Dispose()
     {
+      this.framework.Update -=OnFrameworkUpdate;
       soundSystem.System.Release();
-      soundSystem.System.Dispose();
+      //soundSystem.System.Dispose();
       ScreenReader.Unload();
       //WindowSystem.RemoveAllWindows();
       //ConfigWindow.Dispose();
