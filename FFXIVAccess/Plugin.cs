@@ -85,6 +85,7 @@ namespace FFXIVAccess
       CommandManager = commandManager;
       this.titleScreenMenu = titleScreenMenu;
       this.clientState = clientState;
+      this.dataManager= dataManager;
       this.framework = framework;
       this.gameObjects = gameObjects;
       this.gameGui = gameGui;

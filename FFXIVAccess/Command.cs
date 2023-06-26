@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.UI;
@@ -138,11 +139,15 @@ namespace FFXIVAccess
     }
     private unsafe void OnCommand(string command, string args)
     {
-      var marker = dataManager.GetExcelSheet<Quest>();
-      int a = 2;
-      //GetExcelSheet<MapMarker>().GetRow(3, 13);
-      //ScreenReader.Output($"PlaceName: {dataManager.GetExcelSheet<MapMarker>().GetRow(3, 13).PlaceNameSubtext.Value.Name.ToString()}"
-      //  );
+      uint markerRange=dataManager.GetExcelSheet<Map>().GetRow(Service.MapManager.LoadedMapId).MapMarkerRange;
+      for (uint subId = 0; subId <= 20; subId++)
+      {
+        try
+        {
+          var grid = dataManager.GetExcelSheet<MapMarker>().GetRow(markerRange, subId);
+          ScreenReader.Output($"{grid.PlaceNameSubtext.Value.Name.ToString()} {grid.X.ToString()},{grid.Y.ToString()}");
+        } catch { } // don't throw exception if subId not valid
+      }
     }
   }
 }
