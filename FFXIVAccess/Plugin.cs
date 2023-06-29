@@ -19,6 +19,7 @@ using Dalamud.Plugin;
 using FFXIVAccess.Windows;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.UI;
+using FFXIVClientStructs.FFXIV.Common.Math;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using Lumina.Excel.GeneratedSheets;
 using Mappy;
@@ -190,6 +191,7 @@ namespace FFXIVAccess
         }
         else if (tryingToMove())
         {
+          rayArrund();
           //ScreenReader.Output($"{clientState.LocalPlayer.Rotation}");
           _banging = false;
         }
@@ -211,8 +213,7 @@ namespace FFXIVAccess
       }
       if (keyState[VirtualKey.G])
       {
-        soundSystem.TrackMode = !soundSystem.TrackMode;
-        ScreenReader.Output(soundSystem.Tracks[Service.MapManager.LoadedMapId].Count().ToString());
+        soundSystem.WallMode = !soundSystem.WallMode;
         keyState[VirtualKey.G] = false;
       }
       if (this.clientState.LocalPlayer != null)
@@ -220,9 +221,12 @@ namespace FFXIVAccess
         var rotation = this.clientState.LocalPlayer.Rotation;
         soundSystem.System.Set3DListenerAttributes(0, clientState.LocalPlayer.Position, default, Util.ConvertOrientationToVector(rotation), soundSystem.Up);
         soundSystem.scanMapObject(this.gameObjects, clientState.LocalPlayer, Service.MapManager.LoadedMapId);
-        soundSystem.setFollowMePlayingState(ref _lastPosition);
-        soundSystem.updateTracksSounds(Service.MapManager.LoadedMapId, _lastPosition);
-      }
+        var currentMapWalls= new HashSet<System.Numerics.Vector3>();
+        if(Walls.TryGetValue(Service.MapManager.PlayerLocationMapID, out currentMapWalls)){
+          soundSystem.setFollowMePlayingState(ref _lastPosition);
+        }
+        soundSystem.updateWallSounds(Service.MapManager.LoadedMapId, _lastPosition, currentMapWalls);
+        }
       soundSystem.System.Update();
     }
     /*

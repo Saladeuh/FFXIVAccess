@@ -1,21 +1,23 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using Dalamud.Game.ClientState.Keys;
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Common.Component.BGCollision;
 using FmodAudio.DigitalSignalProcessing;
 using FmodAudio.DigitalSignalProcessing.Effects;
 using Lumina.Excel.GeneratedSheets;
+using Mappy;
 
 namespace FFXIVAccess
 {
   public partial class Plugin
   {
-    private Dictionary<Vector3, bool> collisions { get; set; }
     private List<Vector3> rayOrientations = new List<Vector3> { new Vector3(1, 0, 0), new Vector3(-1, 0, 0), new Vector3(0, 0, 1), new Vector3(0, 0, -1) };
     private bool tryingToMove()
     {
@@ -41,19 +43,24 @@ namespace FFXIVAccess
         }
       }
     }
+    public Dictionary<uint, HashSet<Vector3>> Walls = new Dictionary<uint, HashSet<Vector3>>();
     private void rayArrund()
     {
+      uint mapId = Service.MapManager.PlayerLocationMapID;
       RaycastHit hit;
       foreach (Vector3 orientation in rayOrientations)
       {
-        BGCollisionModule.Raycast(clientState.LocalPlayer.Position, orientation, out hit, 100f);
-        Vector3 roundPoint = Util.RoundVector3(hit.Point, 1);
-        //collisions[roundPoint] = true;
+        BGCollisionModule.Raycast((clientState.LocalPlayer.Position+new Vector3(0, 2, 0)), orientation, out hit, 1000);
+        Vector3 roundPoint = Util.RoundVector3(hit.Point, 0);
+        Walls.TryAdd(mapId, new HashSet<Vector3>());
+        Walls[mapId].Add(roundPoint);
+        /*
         if (Vector3.Distance(roundPoint, clientState.LocalPlayer.Position) <= 5)
         {
           soundSystem.channelWall.Set3DAttributes(hit.Point, default, default);
           soundSystem.channelWall.Paused = false;
         }
+        */
       }
       //ScreenReader.Output($"{collisions.Count()}");
     }

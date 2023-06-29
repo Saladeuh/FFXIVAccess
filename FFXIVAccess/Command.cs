@@ -139,13 +139,15 @@ namespace FFXIVAccess
     }
     private unsafe void OnCommand(string command, string args)
     {
+      
       uint markerRange=dataManager.GetExcelSheet<Map>().GetRow(Service.MapManager.LoadedMapId).MapMarkerRange;
       for (uint subId = 0; subId <= 20; subId++)
       {
         try
         {
-          var grid = dataManager.GetExcelSheet<MapMarker>().GetRow(markerRange, subId);
-          ScreenReader.Output($"{grid.PlaceNameSubtext.Value.Name.ToString()} {grid.X.ToString()},{grid.Y.ToString()}");
+          var marker = dataManager.GetExcelSheet<MapMarker>().GetRow(markerRange, subId);
+          var distance = float.Round(Vector3.Distance(_lastPosition, new Vector3(marker.X, 0, marker.Y)),0);
+          ScreenReader.Output($"{marker.PlaceNameSubtext.Value.Name.ToString()} {distance}");
         } catch { } // don't throw exception if subId not valid
       }
     }

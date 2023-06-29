@@ -26,7 +26,7 @@ namespace FFXIVAccess
     public Sound? EnnemySound, FollowMeSound, EventObjSound, TrackSound;
     public Vector3 Up = new Vector3(0, 1, 0), Forward = new Vector3(0, 0, -1);
     public Dictionary<uint, Channel> ObjChannels = new Dictionary<uint, Channel>();
-    public Dictionary<Vector3, Channel> TracksChannels = new Dictionary<Vector3, Channel>();
+    public Dictionary<Vector3, Channel> WallsChannels = new Dictionary<Vector3, Channel>();
     public Dictionary<uint, HashSet<Vector3>> Tracks = new Dictionary<uint, HashSet<Vector3>>();
     public SoundSystem()
     {
@@ -56,7 +56,7 @@ namespace FFXIVAccess
       TrackSound = sound = System.CreateSound("track.wav", Mode._3D | Mode.Loop_Normal | Mode._3D_LinearSquareRolloff);
       sound.Set3DMinMaxDistance(0f, 20f);
     }
-    public bool TrackMode = false;
+    public bool WallMode = false;
     public void scanMapObject(ObjectTable gameObjects, Character localPlayer, uint mapId)
     {
       foreach (GameObject t in gameObjects)
@@ -66,10 +66,7 @@ namespace FFXIVAccess
         if ((!t.IsDead) && t.ObjectId != localPlayer.ObjectId && t.ObjectKind == ObjectKind.Player && Vector3.Distance(t.Position, localPlayer.Position) <= 200)
         {
           Tracks.TryAdd(mapId, new HashSet<Vector3>());
-          //if (Tracks[mapId].All(tr => Vector3.Distance(tr, t.Position) >= 3))
-          //{
-            Tracks[mapId].Add(Util.RoundVector3(t.Position, 0));
-          //}
+          Tracks[mapId].Add(Util.RoundVector3(t.Position, 0));
         }
       }
     }
@@ -122,44 +119,44 @@ namespace FFXIVAccess
       }
       */
     }
-    public void updateTracksSounds(uint mapId, Vector3 playerPosition)
+    public void updateWallSounds(uint mapId, Vector3 playerPosition, HashSet<Vector3> walls)
     {
-      if (TrackMode)
+      if (WallMode)
       {
-        foreach (Vector3 track in Tracks[mapId])
+        foreach (Vector3 wallPoint in walls)
         {
-          float distance = Vector3.Distance(track, playerPosition);
-          if (distance <= 20 && distance > 3)
+          float distance = Vector3.Distance(wallPoint, playerPosition);
+          if (distance <= 5)
           {
-            if (!TracksChannels.ContainsKey(track))
+            if (!WallsChannels.ContainsKey(wallPoint))
             {
-              Channel channelTrack;
-              channelTrack = System.PlaySound(TrackSound.Value, paused: false);
-              channelTrack.Volume = 0.2f;
-              channelTrack.Set3DAttributes(track, default, default);
-              TracksChannels[track] = channelTrack;
+              Channel wallTrack;
+              wallTrack = System.PlaySound(TrackSound.Value, paused: false);
+              wallTrack.Volume = 0.2f;
+              wallTrack.Set3DAttributes(wallPoint, default, default);
+              WallsChannels[wallPoint] = wallTrack;
             }
           }
           else
           {
-            if (TracksChannels.ContainsKey(track))
+            if (WallsChannels.ContainsKey(wallPoint))
             {
-              TracksChannels[track].Stop();
-              TracksChannels.Remove(track);
+              WallsChannels[wallPoint].Stop();
+              WallsChannels.Remove(wallPoint);
             }
           }
         }
       }
       else
       {
-        foreach (Channel channel in TracksChannels.Values)
+        foreach (Channel channel in WallsChannels.Values)
         {
           if (channel != null && channel.IsPlaying)
           {
             channel.Stop();
           }
         }
-        TracksChannels.Clear();
+        WallsChannels.Clear();
       }
     }
     public void updateFollowMe(Vector3 position, float min, float max)
