@@ -144,10 +144,10 @@ namespace FFXIVAccess
       var playerRotation = clientState.LocalPlayer.Rotation;
       Vector3 closestHit = Vector3.PositiveInfinity;
       float closestDistance = float.PositiveInfinity;
-      for (float i = playerRotation - float.Pi / 4; i < playerRotation + float.Pi / 4; i += float.Pi / 10)
+      for (float i = -float.Pi; i <float.Pi; i += float.Pi / 10)
       {
         RaycastHit hit;
-        BGCollisionModule.Raycast((findGroundAtPlayerPosition() + new System.Numerics.Vector3(0, 2, 0)), Util.ConvertOrientationToVector(i), out hit, 10000);
+        BGCollisionModule.Raycast((findGround(clientState.LocalPlayer.Position) + new System.Numerics.Vector3(0, 2, 0)), Util.ConvertOrientationToVector(i), out hit, 10000);
         float distance = Vector3.Distance(hit.Point, soundSystem.FollowMePoint);
         if (distance < closestDistance)
         {

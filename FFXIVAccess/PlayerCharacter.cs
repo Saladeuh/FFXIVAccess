@@ -64,10 +64,10 @@ namespace FFXIVAccess
       }
       //ScreenReader.Output($"{collisions.Count()}");
     }
-    public Vector3 findGroundAtPlayerPosition()
+    public Vector3 findGround(Vector3 position)
     {
       RaycastHit roof;
-      BGCollisionModule.Raycast(clientState.LocalPlayer.Position, new Vector3(0, 1, 0), out roof, 1000);// ray to the sky
+      BGCollisionModule.Raycast(position, new Vector3(0, 1, 0), out roof, 1000);// ray to the sky
       RaycastHit hit;
       if (roof.Point != new Vector3(0, 0, 0)) // indoor
       {
@@ -75,9 +75,38 @@ namespace FFXIVAccess
       }
       else
       {
-        BGCollisionModule.Raycast(clientState.LocalPlayer.Position+new Vector3(0, 1000, 0), new Vector3(0, -1, 0), out hit, 10000);
+        BGCollisionModule.Raycast(position +new Vector3(0, 1000, 0), new Vector3(0, -1, 0), out hit, 10000);
       }
       return hit.Point;
+    }
+    public List<Vector3> searchPath(List<Vector3>? points)
+    {
+      if(points == null)
+      {
+        points= new List<Vector3>();
+        points.Add(clientState.LocalPlayer.Position);
+      }
+      Vector3 closestHit = points[0];
+      float closestDistance = Vector3.Distance(closestHit, soundSystem.FollowMePoint);
+      List<Vector3> result = new List<Vector3>();
+      foreach (var point in points)
+      {
+        for (float i = -float.Pi; i < float.Pi; i += float.Pi / 10)
+        {
+          RaycastHit hit;
+          BGCollisionModule.Raycast((findGround(point) + new System.Numerics.Vector3(0, 2, 0)), Util.ConvertOrientationToVector(i), out hit, 10000);
+          float distance = Vector3.Distance(hit.Point, soundSystem.FollowMePoint);
+          result.Add(hit.Point);        }
+      }
+      result.Sort(delegate (Vector3 x, Vector3 y)
+      {
+        float distanceX= Vector3.Distance(x, soundSystem.FollowMePoint);
+        float distanceY = Vector3.Distance(y, soundSystem.FollowMePoint);
+        if (distanceX == distanceY) return 0;
+        else if(distanceX > distanceY) return 1;
+        else if(distanceX < distanceY) return -1;
+        else return x.Y.CompareTo(y.Y);
+      });
     }
   }
 }
