@@ -50,7 +50,7 @@ namespace FFXIVAccess
       RaycastHit hit;
       foreach (Vector3 orientation in rayOrientations)
       {
-        BGCollisionModule.Raycast((clientState.LocalPlayer.Position+new Vector3(0, 2, 0)), orientation, out hit, 1000);
+        BGCollisionModule.Raycast((clientState.LocalPlayer.Position + new Vector3(0, 2, 0)), orientation, out hit, 1000);
         Vector3 roundPoint = Util.RoundVector3(hit.Point, 0);
         Walls.TryAdd(mapId, new HashSet<Vector3>());
         Walls[mapId].Add(roundPoint);
@@ -63,6 +63,21 @@ namespace FFXIVAccess
         */
       }
       //ScreenReader.Output($"{collisions.Count()}");
+    }
+    public Vector3 findGroundAtPlayerPosition()
+    {
+      RaycastHit roof;
+      BGCollisionModule.Raycast(clientState.LocalPlayer.Position, new Vector3(0, 1, 0), out roof, 1000);// ray to the sky
+      RaycastHit hit;
+      if (roof.Point != new Vector3(0, 0, 0)) // indoor
+      {
+        BGCollisionModule.Raycast(roof.Point - new System.Numerics.Vector3(0, 1, 0), new Vector3(0, -1, 0), out hit, 1000);
+      }
+      else
+      {
+        BGCollisionModule.Raycast(clientState.LocalPlayer.Position+new Vector3(0, 1000, 0), new Vector3(0, -1, 0), out hit, 10000);
+      }
+      return hit.Point;
     }
   }
 }

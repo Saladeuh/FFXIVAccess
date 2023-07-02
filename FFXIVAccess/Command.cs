@@ -1,11 +1,13 @@
 // trash tests
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.UI;
+using FFXIVClientStructs.FFXIV.Common.Component.BGCollision;
 using FFXIVClientStructs.FFXIV.Common.Math;
 using Lumina.Data.Parsing.Scd;
 using Lumina.Excel.GeneratedSheets;
@@ -139,7 +141,26 @@ namespace FFXIVAccess
     }
     private unsafe void OnCommand(string command, string args)
     {
-      
+      var playerRotation = clientState.LocalPlayer.Rotation;
+      Vector3 closestHit = Vector3.PositiveInfinity;
+      float closestDistance = float.PositiveInfinity;
+      for (float i = playerRotation - float.Pi / 4; i < playerRotation + float.Pi / 4; i += float.Pi / 10)
+      {
+        RaycastHit hit;
+        BGCollisionModule.Raycast((findGroundAtPlayerPosition() + new System.Numerics.Vector3(0, 2, 0)), Util.ConvertOrientationToVector(i), out hit, 10000);
+        float distance = Vector3.Distance(hit.Point, soundSystem.FollowMePoint);
+        if (distance < closestDistance)
+        {
+          closestDistance = distance;
+          closestHit = hit.Point;
+        }
+      }
+
+      /*
+      soundSystem.channelShortFollowMe.Set3DAttributes(closestHit, default, default);
+      soundSystem.channelShortFollowMe.Paused= false;
+      ScreenReader.Output(Vector3.Distance(closestHit,clientState.LocalPlayer.Position).ToString());
+      /*
       uint markerRange=dataManager.GetExcelSheet<Map>().GetRow(Service.MapManager.LoadedMapId).MapMarkerRange;
       for (uint subId = 0; subId <= 20; subId++)
       {
@@ -150,6 +171,7 @@ namespace FFXIVAccess
           ScreenReader.Output($"{marker.PlaceNameSubtext.Value.Name.ToString()} {distance}");
         } catch { } // don't throw exception if subId not valid
       }
+      */
     }
   }
 }

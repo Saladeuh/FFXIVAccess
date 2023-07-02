@@ -19,7 +19,7 @@ namespace FFXIVAccess
   public class SoundSystem
   {
     public FmodSystem System { get; }
-    public Channel? channelFollowMe, channelWall;
+    public Channel? channelFollowMe, channelShortFollowMe;
     public Vector3 FollowMePoint { get; set; }
 
     private Vector3 ListenerPos = new Vector3() { Z = -1.0f };
@@ -50,11 +50,10 @@ namespace FFXIVAccess
 
       EventObjSound = sound = System.CreateSound("eventObj.wav", Mode._3D | Mode.Loop_Normal | Mode._3D_LinearSquareRolloff);
       sound.Set3DMinMaxDistance(min, 40f);
-      channelWall = System.PlaySound(EventObjSound.Value, paused: true);
-      channelWall.Set3DMinMaxDistance(0f, 10f);
-
       TrackSound = sound = System.CreateSound("track.wav", Mode._3D | Mode.Loop_Normal | Mode._3D_LinearSquareRolloff);
       sound.Set3DMinMaxDistance(0f, 20f);
+      channelShortFollowMe= System.PlaySound(EventObjSound.Value, paused: true);
+      channelShortFollowMe.Set3DMinMaxDistance(0f, 200f);
     }
     public bool WallMode = false;
     public void scanMapObject(ObjectTable gameObjects, Character localPlayer, uint mapId)
