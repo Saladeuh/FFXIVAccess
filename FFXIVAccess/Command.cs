@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.UI;
@@ -141,6 +142,12 @@ namespace FFXIVAccess
     }
     private unsafe void OnCommand(string command, string args)
     {
+      Thread thread = new Thread(() => {
+      var path = searchFollowMePath();
+      ScreenReader.Output($"{Vector3.Distance(path, soundSystem.FollowMePoint)}, {Vector3.Distance(path, _lastPosition)}");
+    });
+      thread.Start();
+      /*
       var playerRotation = clientState.LocalPlayer.Rotation;
       Vector3 closestHit = Vector3.PositiveInfinity;
       float closestDistance = float.PositiveInfinity;

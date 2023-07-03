@@ -75,38 +75,52 @@ namespace FFXIVAccess
       }
       else
       {
-        BGCollisionModule.Raycast(position +new Vector3(0, 1000, 0), new Vector3(0, -1, 0), out hit, 10000);
+        BGCollisionModule.Raycast(position + new Vector3(0, 1000, 0), new Vector3(0, -1, 0), out hit, 10000);
       }
       return hit.Point;
     }
-    public List<Vector3> searchPath(List<Vector3>? points)
+    public Vector3 searchFollowMePath(List<Vector3>? points=null)
     {
-      if(points == null)
+      if (points == null)
       {
-        points= new List<Vector3>();
+        points = new List<Vector3>();
         points.Add(clientState.LocalPlayer.Position);
       }
-      Vector3 closestHit = points[0];
-      float closestDistance = Vector3.Distance(closestHit, soundSystem.FollowMePoint);
-      List<Vector3> result = new List<Vector3>();
-      foreach (var point in points)
+      List<Vector3> result = new List<Vector3>(points.Count * 63); 
+      for (int iPoint = 0; iPoint < points.Count; iPoint++)
       {
+        var point = points[iPoint];
         for (float i = -float.Pi; i < float.Pi; i += float.Pi / 10)
         {
           RaycastHit hit;
           BGCollisionModule.Raycast((findGround(point) + new System.Numerics.Vector3(0, 2, 0)), Util.ConvertOrientationToVector(i), out hit, 10000);
+          result.Add(hit.Point);
           float distance = Vector3.Distance(hit.Point, soundSystem.FollowMePoint);
-          result.Add(hit.Point);        }
+          if(distance < 30) // find the end
+          {
+            return hit.Point;
+          }
+          int intermediateFactor = 20;
+          if (distance > intermediateFactor * 2)  // add intermediate points to result
+          {
+            while (distance > intermediateFactor)
+            {
+              result.Add(hit.Point * ((distance - intermediateFactor) / distance));
+              distance -= intermediateFactor;
+            }
+          }
+        }
       }
-      result.Sort(delegate (Vector3 x, Vector3 y)
+      result.Sort(delegate (Vector3 x, Vector3 y) // sort from the smallest to the biggest distance
       {
-        float distanceX= Vector3.Distance(x, soundSystem.FollowMePoint);
+        float distanceX = Vector3.Distance(x, soundSystem.FollowMePoint);
         float distanceY = Vector3.Distance(y, soundSystem.FollowMePoint);
         if (distanceX == distanceY) return 0;
-        else if(distanceX > distanceY) return 1;
-        else if(distanceX < distanceY) return -1;
+        else if (distanceX > distanceY) return -1;
+        else if (distanceX < distanceY) return 1;
         else return x.Y.CompareTo(y.Y);
       });
+      return searchFollowMePath(result);
     }
   }
 }
