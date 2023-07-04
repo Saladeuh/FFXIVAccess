@@ -140,12 +140,17 @@ namespace FFXIVAccess
         }
       }
     }
+    Thread thread = null;
     private unsafe void OnCommand(string command, string args)
     {
-      Thread thread = new Thread(() => {
-      var path = searchFollowMePath();
-      ScreenReader.Output($"{Vector3.Distance(path, soundSystem.FollowMePoint)}, {Vector3.Distance(path, _lastPosition)}");
-    });
+      thread = new Thread(() =>
+      {
+        var result = searchFollowMePath(clientState.LocalPlayer.Position, 300);
+        var path = extractPath(result);
+        result = searchFollowMePath(path.Last(), 200);
+        path=path.Concat(extractPath(result)).ToList();
+        ScreenReader.Output($"{Vector3.Distance(path.Last(), soundSystem.FollowMePoint)}, {Vector3.Distance(path.Last(), _lastPosition)}, {path.Count()}");
+      });
       thread.Start();
       /*
       var playerRotation = clientState.LocalPlayer.Rotation;

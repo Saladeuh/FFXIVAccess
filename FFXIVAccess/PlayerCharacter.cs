@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Numerics;
@@ -79,48 +80,90 @@ namespace FFXIVAccess
       }
       return hit.Point;
     }
-    public Vector3 searchFollowMePath(List<Vector3>? points=null)
+    public class Point
+    {
+      public Vector3 Position { get; set; }
+      public Point? Origin { get; set; }
+      public static Point pathEnd { get; set; }
+      public Point(Vector3 position, Point? origin=null)
+      {
+        Position = position;
+        Origin = origin;
+      }
+      public float distanceOrigin()
+      {
+        return Vector3.Distance(Position, Origin.Position);
+      }
+    }
+    int intermediateFactor = 20;
+    public List<Point> searchFollowMePath(Vector3 start, int acceptanceRay=50, List<Point>? points = null)
     {
       if (points == null)
       {
-        points = new List<Vector3>();
-        points.Add(clientState.LocalPlayer.Position);
+        points = new List<Point>();
+        points.Add(new Point(start, null));
       }
-      List<Vector3> result = new List<Vector3>(points.Count * 63); 
+      var result = new List<Point>(points.Count * 63); 
       for (int iPoint = 0; iPoint < points.Count; iPoint++)
       {
-        var point = points[iPoint];
+        var origin = points[iPoint].Position;
+        float distanceOriginFollowMe = Vector3.Distance(origin, soundSystem.FollowMePoint);
+        if (distanceOriginFollowMe < acceptanceRay) // find the end
+        {
+          Point.pathEnd = points[iPoint]; // use to extract path from result
+          return result;
+        }
         for (float i = -float.Pi; i < float.Pi; i += float.Pi / 10)
         {
           RaycastHit hit;
-          BGCollisionModule.Raycast((findGround(point) + new System.Numerics.Vector3(0, 2, 0)), Util.ConvertOrientationToVector(i), out hit, 10000);
-          result.Add(hit.Point);
-          float distance = Vector3.Distance(hit.Point, soundSystem.FollowMePoint);
-          if(distance < 30) // find the end
+          BGCollisionModule.Raycast((findGround(origin) + new System.Numerics.Vector3(0, 2, 0)), Util.ConvertOrientationToVector(i), out hit, 10000);
+          float distanceToOrigin = Vector3.Distance(hit.Point, origin);
+          if (distanceToOrigin >3)
           {
-            return hit.Point;
-          }
-          int intermediateFactor = 20;
-          if (distance > intermediateFactor * 2)  // add intermediate points to result
-          {
-            while (distance > intermediateFactor)
+            Point hitPoint = new Point(hit.Point, points[iPoint]);
+            result.Add(hitPoint);
+            float distance = Vector3.Distance(hit.Point, soundSystem.FollowMePoint);
+            if (distance < acceptanceRay) // find the end
             {
-              result.Add(hit.Point * ((distance - intermediateFactor) / distance));
-              distance -= intermediateFactor;
+              Point.pathEnd = hitPoint; // use to extract path from result
+              return result;
+            }
+            if (distanceToOrigin < intermediateFactor * 2) // add intermediate points to result
+            {
+              while (distanceToOrigin > intermediateFactor)
+              {
+                var intermediatePoint = hit.Point * ((distanceToOrigin - intermediateFactor) / distanceToOrigin);
+                result.Add(new Point(intermediatePoint, points[iPoint]));
+                distanceToOrigin -= intermediateFactor;
+              }
             }
           }
         }
       }
-      result.Sort(delegate (Vector3 x, Vector3 y) // sort from the smallest to the biggest distance
+      ScreenReader.Output($"yo {result.Count()}");
+      result.Sort(delegate (Point x, Point y) // sort from the smallest to the biggest distance
       {
-        float distanceX = Vector3.Distance(x, soundSystem.FollowMePoint);
-        float distanceY = Vector3.Distance(y, soundSystem.FollowMePoint);
+        float distanceX = Vector3.Distance(x.Position, soundSystem.FollowMePoint);
+        float distanceY = Vector3.Distance(y.Position, soundSystem.FollowMePoint);
         if (distanceX == distanceY) return 0;
         else if (distanceX > distanceY) return -1;
         else if (distanceX < distanceY) return 1;
-        else return x.Y.CompareTo(y.Y);
+        else return x.Position.Y.CompareTo(y.Position.Y);
       });
-      return searchFollowMePath(result);
+      return searchFollowMePath(start, acceptanceRay, result);
+      //return searchFollowMePath(result.SkipLast(result.Count()/2).ToList());
+    }
+    private List<Vector3> extractPath(List<Point> searchResult)
+    {
+      var path = new List<Vector3>();
+      var currentPoint = Point.pathEnd;
+      while (currentPoint != null)
+      {
+        path.Add(currentPoint.Position);
+        currentPoint =currentPoint.Origin;
+          }
+      path.Reverse();
+      return path;
     }
   }
 }
