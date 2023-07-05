@@ -21,6 +21,9 @@ namespace FFXIVAccess
     public FmodSystem System { get; }
     public Channel? channelFollowMe, channelShortFollowMe;
     public Vector3 FollowMePoint { get; set; }
+    public bool GPSState { get; set; }
+    public List<Vector3> GPSPath { get; set; }
+    public int GPSPlayingIndex { get; set; }
 
     private Vector3 ListenerPos = new Vector3() { Z = -1.0f };
     public Sound? EnnemySound, FollowMeSound, EventObjSound, TrackSound;
@@ -41,7 +44,8 @@ namespace FFXIVAccess
       //Load some sounds
       float min = 2f, max = 40f; // 40 is apprximatively
       Sound sound;
-
+      GPSPath = new List<Vector3>();
+      GPSState = false;
       EnnemySound = sound = System.CreateSound("test.wav", Mode._3D | Mode.Loop_Normal | Mode._3D_LinearSquareRolloff);
       sound.Set3DMinMaxDistance(min, max);
 
@@ -52,8 +56,8 @@ namespace FFXIVAccess
       sound.Set3DMinMaxDistance(min, 40f);
       TrackSound = sound = System.CreateSound("track.wav", Mode._3D | Mode.Loop_Normal | Mode._3D_LinearSquareRolloff);
       sound.Set3DMinMaxDistance(0f, 20f);
-      channelShortFollowMe= System.PlaySound(EventObjSound.Value, paused: true);
-      channelShortFollowMe.Set3DMinMaxDistance(0f, 200f);
+      channelShortFollowMe = System.PlaySound(EventObjSound.Value, paused: true);
+      channelShortFollowMe.Set3DMinMaxDistance(0f, 60f);
     }
     public bool WallMode = false;
     public void scanMapObject(ObjectTable gameObjects, Character localPlayer, uint mapId)
@@ -198,7 +202,37 @@ namespace FFXIVAccess
       if (channelFollowMe.Volume > 0)
         channelFollowMe.Volume = 0f;
       else channelFollowMe.Volume = 1f;
-
+    }
+    public void GPSStart(List<Vector3> path, Vector3 playerPos)
+    {
+      GPSState = true;
+      GPSPath = path;
+      GPSPlayingIndex = 0;
+      channelShortFollowMe.Set3DAttributes(path[GPSPlayingIndex], default, default);
+      channelShortFollowMe.Set3DMinMaxDistance(0, Vector3.Distance(path[GPSPlayingIndex], playerPos)*2f);
+      channelShortFollowMe.Paused = false;
+      channelFollowMe.Paused = true;
+      ScreenReader.Output("c bon");
+    }
+    public void GPSUpdate(Vector3 playerPos)
+    {
+      if (GPSState)
+      {
+        if (Vector3.Distance(playerPos, GPSPath[GPSPlayingIndex]) <= 10)
+        {
+          if (GPSPlayingIndex == GPSPath.Count() - 1)
+          {
+            GPSState = false;
+            channelFollowMe.Paused = false;
+            ScreenReader.Output("fini");
+            return;
+          }
+          GPSPlayingIndex++;
+          channelShortFollowMe.Set3DAttributes(GPSPath[GPSPlayingIndex], default, default);
+          channelShortFollowMe.Set3DMinMaxDistance(0, Vector3.Distance(GPSPath[GPSPlayingIndex], playerPos)*2f);
+          ScreenReader.Output(GPSPlayingIndex.ToString());
+        }
+      }
     }
   }
 }

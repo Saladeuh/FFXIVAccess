@@ -85,7 +85,7 @@ namespace FFXIVAccess
       public Vector3 Position { get; set; }
       public Point? Origin { get; set; }
       public static Point pathEnd { get; set; }
-      public Point(Vector3 position, Point? origin=null)
+      public Point(Vector3 position, Point? origin = null)
       {
         Position = position;
         Origin = origin;
@@ -96,14 +96,14 @@ namespace FFXIVAccess
       }
     }
     int intermediateFactor = 20;
-    public List<Point> searchFollowMePath(Vector3 start, int acceptanceRay=50, List<Point>? points = null)
+    public List<Point> searchFollowMePath(Vector3 start, int acceptanceRay = 50, List<Point>? points = null)
     {
       if (points == null)
       {
         points = new List<Point>();
         points.Add(new Point(start, null));
       }
-      var result = new List<Point>(points.Count * 63); 
+      var result = new List<Point>(points.Count * 63);
       for (int iPoint = 0; iPoint < points.Count; iPoint++)
       {
         var origin = points[iPoint].Position;
@@ -118,7 +118,7 @@ namespace FFXIVAccess
           RaycastHit hit;
           BGCollisionModule.Raycast((findGround(origin) + new System.Numerics.Vector3(0, 2, 0)), Util.ConvertOrientationToVector(i), out hit, 10000);
           float distanceToOrigin = Vector3.Distance(hit.Point, origin);
-          if (distanceToOrigin >3)
+          if (distanceToOrigin > 3)
           {
             Point hitPoint = new Point(hit.Point, points[iPoint]);
             result.Add(hitPoint);
@@ -157,11 +157,11 @@ namespace FFXIVAccess
     {
       var path = new List<Vector3>();
       var currentPoint = Point.pathEnd;
-      while (currentPoint != null)
+      while (currentPoint.Origin != null)
       {
         path.Add(currentPoint.Position);
-        currentPoint =currentPoint.Origin;
-          }
+        currentPoint = currentPoint.Origin;
+      }
       path.Reverse();
       return path;
     }

@@ -86,7 +86,7 @@ namespace FFXIVAccess
       CommandManager = commandManager;
       this.titleScreenMenu = titleScreenMenu;
       this.clientState = clientState;
-      this.dataManager= dataManager;
+      this.dataManager = dataManager;
       this.framework = framework;
       this.gameObjects = gameObjects;
       this.gameGui = gameGui;
@@ -221,12 +221,14 @@ namespace FFXIVAccess
         var rotation = this.clientState.LocalPlayer.Rotation;
         soundSystem.System.Set3DListenerAttributes(0, clientState.LocalPlayer.Position, default, Util.ConvertOrientationToVector(rotation), soundSystem.Up);
         soundSystem.scanMapObject(this.gameObjects, clientState.LocalPlayer, Service.MapManager.LoadedMapId);
-        var currentMapWalls= new HashSet<System.Numerics.Vector3>();
-        if(Walls.TryGetValue(Service.MapManager.PlayerLocationMapID, out currentMapWalls)){
+        soundSystem.GPSUpdate(clientState.LocalPlayer.Position);
+        var currentMapWalls = new HashSet<System.Numerics.Vector3>();
+        if (Walls.TryGetValue(Service.MapManager.PlayerLocationMapID, out currentMapWalls))
+        {
           soundSystem.setFollowMePlayingState(ref _lastPosition);
         }
         soundSystem.updateWallSounds(Service.MapManager.LoadedMapId, _lastPosition, currentMapWalls);
-        }
+      }
       soundSystem.System.Update();
     }
     /*
@@ -254,7 +256,7 @@ namespace FFXIVAccess
       */
     public void Dispose()
     {
-      this.framework.Update -=OnFrameworkUpdate;
+      this.framework.Update -= OnFrameworkUpdate;
       soundSystem.System.Release();
       //soundSystem.System.Dispose();
       ScreenReader.Unload();

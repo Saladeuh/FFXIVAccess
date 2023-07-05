@@ -145,10 +145,11 @@ namespace FFXIVAccess
     {
       thread = new Thread(() =>
       {
-        var result = searchFollowMePath(clientState.LocalPlayer.Position, 300);
+        var result = searchFollowMePath(clientState.LocalPlayer.Position, 100);
         var path = extractPath(result);
-        result = searchFollowMePath(path.Last(), 200);
-        path=path.Concat(extractPath(result)).ToList();
+        //result = searchFollowMePath(path.Last(), 200);
+        //path=path.Concat(extractPath(result)).ToList();
+        soundSystem.GPSStart(path, clientState.LocalPlayer.Position);
         ScreenReader.Output($"{Vector3.Distance(path.Last(), soundSystem.FollowMePoint)}, {Vector3.Distance(path.Last(), _lastPosition)}, {path.Count()}");
       });
       thread.Start();
