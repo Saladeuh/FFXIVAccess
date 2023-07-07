@@ -116,7 +116,7 @@ namespace FFXIVAccess
         for (float i = -float.Pi; i < float.Pi; i += float.Pi / 10)
         {
           RaycastHit hit;
-          BGCollisionModule.Raycast((findGround(origin) + new System.Numerics.Vector3(0, 2, 0)), Util.ConvertOrientationToVector(i), out hit, 10000);
+          BGCollisionModule.Raycast((findGround(origin) + new System.Numerics.Vector3(0, 2f, 0)), Util.ConvertOrientationToVector(i), out hit, 10000);
           float distanceToOrigin = Vector3.Distance(hit.Point, origin);
           if (distanceToOrigin > 3)
           {

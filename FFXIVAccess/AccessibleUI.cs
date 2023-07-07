@@ -39,7 +39,16 @@ namespace FFXIVAccess
       { "EnemyList", typeof(AddonSelectString) },
       { "_TitleMenu", typeof(AddonSelectString) },
       { "_CharaSelectListMenu", typeof(AddonSelectString) },
+      { "ConfigKeyBind", typeof(AddonSelectString) },
       { "SelectOk", typeof(AddonSelectString) },
+      { "Macro", typeof(AddonSelectString) },
+      { "MacroTextCommandList", typeof(AddonSelectString) },
+      { "ConfigSystem", typeof(AddonSelectString) },
+      { "ConfigCharacter", typeof(AddonSelectString) },
+      { "ConfigCaraOpeGeneral", typeof(AddonSelectString) },
+      { "ConfigCaraOpeTarget", typeof(AddonSelectString) },
+      { "ConfigCaraOpeCircle", typeof(AddonSelectString) },
+      { "ConfigCaraOpeChara", typeof(AddonSelectString) },
     };
 
     private void onQuestToast(ref SeString message, ref QuestToastOptions options, ref bool isHandled)
