@@ -45,13 +45,13 @@ namespace FFXIVAccess
       }
     }
     public Dictionary<uint, HashSet<Vector3>> Walls = new Dictionary<uint, HashSet<Vector3>>();
-    private void rayArrund()
+    private void rayArround()
     {
       uint mapId = Service.MapManager.PlayerLocationMapID;
       RaycastHit hit;
       foreach (Vector3 orientation in rayOrientations)
       {
-        BGCollisionModule.Raycast((clientState.LocalPlayer.Position + new Vector3(0, 2, 0)), orientation, out hit, 1000);
+        BGCollisionModule.Raycast((clientState.LocalPlayer.Position + new Vector3(0, 1f, 0)), orientation, out hit, 1000);
         Vector3 roundPoint = Util.RoundVector3(hit.Point, 0);
         Walls.TryAdd(mapId, new HashSet<Vector3>());
         Walls[mapId].Add(roundPoint);
@@ -116,7 +116,7 @@ namespace FFXIVAccess
         for (float i = -float.Pi; i < float.Pi; i += float.Pi / 10)
         {
           RaycastHit hit;
-          BGCollisionModule.Raycast((findGround(origin) + new System.Numerics.Vector3(0, 2f, 0)), Util.ConvertOrientationToVector(i), out hit, 10000);
+          BGCollisionModule.Raycast((findGround(origin) + new System.Numerics.Vector3(0, 1.5f, 0)), Util.ConvertOrientationToVector(i), out hit, 10000);
           float distanceToOrigin = Vector3.Distance(hit.Point, origin);
           if (distanceToOrigin > 3)
           {

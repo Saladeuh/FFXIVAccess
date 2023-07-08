@@ -145,7 +145,7 @@ namespace FFXIVAccess
     {
       thread = new Thread(() =>
       {
-        var result = searchFollowMePath(clientState.LocalPlayer.Position, 100);
+        var result = searchFollowMePath(clientState.LocalPlayer.Position, 50);
         var path = extractPath(result);
         //result = searchFollowMePath(path.Last(), 200);
         //path=path.Concat(extractPath(result)).ToList();

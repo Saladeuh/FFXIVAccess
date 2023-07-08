@@ -18,6 +18,7 @@ using Dalamud.IoC;
 using Dalamud.Plugin;
 using FFXIVAccess.Windows;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using CSFramework = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Common.Component.BGCollision;
 using FFXIVClientStructs.FFXIV.Common.Math;
@@ -28,7 +29,7 @@ using Mappy.System;
 
 namespace FFXIVAccess
 {
-  public sealed partial class Plugin : IDalamudPlugin
+  public unsafe sealed partial class Plugin : IDalamudPlugin
   {
     public string Name => "FFXIVAccess";
     public string Version => "0.0.0";
@@ -65,7 +66,7 @@ namespace FFXIVAccess
       ChatGui chat,
       ClientState clientState,
       [RequiredVersion("1.0")] CommandManager commandManager,
-      Framework framework,
+      Dalamud.Game.Framework framework,
       FlyTextGui flyTextGui,
       GameGui gameGui,
       KeyState keyState,
@@ -145,7 +146,8 @@ namespace FFXIVAccess
       ScreenReader.Output(soundSystem.ObjChannels.Count().ToString());
       soundSystem.cleanObjChannel();
     }
-
+    private RaptureAtkModule* RaptureAtkModule => CSFramework.Instance()->GetUiModule()->GetRaptureAtkModule();
+    private bool IsTextInputActive => RaptureAtkModule->AtkModule.IsTextInputActive();
     private nint FocusedAddon = nint.Zero;
     private AtkResNode? _lastFocusedNode;
     SortedDictionary<string, nint> _lastAddons = new SortedDictionary<string, nint>();
@@ -192,7 +194,7 @@ namespace FFXIVAccess
         }
         else if (tryingToMove())
         {
-          rayArrund();
+          rayArround();
           //ScreenReader.Output($"{clientState.LocalPlayer.Rotation}");
           _banging = false;
         }
@@ -212,10 +214,13 @@ namespace FFXIVAccess
           isHealed = true;
         }
       }
-      if (keyState[VirtualKey.G])
+      if (IsTextInputActive)
       {
-        soundSystem.WallMode = !soundSystem.WallMode;
-        keyState[VirtualKey.G] = false;
+        if (keyState[VirtualKey.G])
+        {
+          soundSystem.WallMode = !soundSystem.WallMode;
+          keyState[VirtualKey.G] = false;
+        }
       }
       if (this.clientState.LocalPlayer != null)
       {
