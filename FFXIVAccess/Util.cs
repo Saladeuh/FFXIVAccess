@@ -5,58 +5,56 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FFXIVAccess
+namespace FFXIVAccess;
+public class Util
 {
-  public class Util
+  public static Vector3 ConvertOrientationToVector(float angle)
   {
-    public static Vector3 ConvertOrientationToVector(float angle)
+    float x = 0;
+    float z = 0;
+    // Détermination du vecteur en fonction de l'angle
+    /*
+    if (angle > 0)
     {
-      float x = 0;
-      float z = 0;
-      // Détermination du vecteur en fonction de l'angle
-      /*
-      if (angle > 0)
+      if (angle < Math.PI / 2) // Quadrant sud-est
       {
-        if (angle < Math.PI / 2) // Quadrant sud-est
-        {
-          x = 1;
-          z = 1;
-        }
-        else // Quadrant nord-est
-        {
-          x = 1;
-          z = -1;
-        }
+        x = 1;
+        z = 1;
       }
-      else if (angle < 0)
+      else // Quadrant nord-est
       {
-        if (angle > -Math.PI / 2) // Quadrant sud-ouest
-        {
-          x = -1;
-          z = 1;
-        }
-        else // Quadrant nord-ouest
-        {
-          x = -1;
-          z = -1;
-        }
+        x = 1;
+        z = -1;
       }
-      else
-      {
-        z = 1; // Direction nord
-      }
-      */
-      x = (float)Math.Sin(angle);
-      z = (float)Math.Cos(angle);
-      return new Vector3((float)x, 0, (float)z);
     }
-    public static Vector3 RoundVector3(Vector3 vector, int round)
+    else if (angle < 0)
     {
-      float roundedX = float.Round(vector.X, round);
-      float roundedY =float.Round(vector.Y, round);
-      float roundedZ = float.Round(vector.Z, round);
+      if (angle > -Math.PI / 2) // Quadrant sud-ouest
+      {
+        x = -1;
+        z = 1;
+      }
+      else // Quadrant nord-ouest
+      {
+        x = -1;
+        z = -1;
+      }
+    }
+    else
+    {
+      z = 1; // Direction nord
+    }
+    */
+    x = (float)Math.Sin(angle);
+    z = (float)Math.Cos(angle);
+    return new Vector3((float)x, 0, (float)z);
+  }
+  public static Vector3 RoundVector3(Vector3 vector, int round)
+  {
+    float roundedX = float.Round(vector.X, round);
+    float roundedY = float.Round(vector.Y, round);
+    float roundedZ = float.Round(vector.Z, round);
 
-      return new Vector3(roundedX, roundedY, roundedZ);
-    }
+    return new Vector3(roundedX, roundedY, roundedZ);
   }
 }

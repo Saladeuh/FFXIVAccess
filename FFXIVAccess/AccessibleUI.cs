@@ -17,8 +17,7 @@ using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using Lumina.Excel.GeneratedSheets;
 
-namespace FFXIVAccess
-{
+namespace FFXIVAccess;
   public partial class Plugin
   {
     public static readonly Dictionary<string, Type> addonDict = new Dictionary<string, Type>
@@ -158,4 +157,3 @@ namespace FFXIVAccess
       }
     }
   }
-}
