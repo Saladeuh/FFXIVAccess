@@ -213,7 +213,7 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
         isHealed = true;
       }
     }
-    if (!IsTextInputActive || !ImGuiNET.ImGui.GetIO().WantCaptureKeyboard)
+    if (!IsTextInputActive && !ImGuiNET.ImGui.GetIO().WantCaptureKeyboard)
     {
       if (keyState[VirtualKey.G])
       {
