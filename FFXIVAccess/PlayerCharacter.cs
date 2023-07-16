@@ -8,12 +8,14 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using Dalamud.Game.ClientState.Keys;
+using FFXIVClientStructs.FFXIV.Client.Game.Event;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Common.Component.BGCollision;
 using FmodAudio.DigitalSignalProcessing;
 using FmodAudio.DigitalSignalProcessing.Effects;
 using Lumina.Excel.GeneratedSheets;
 using Mappy;
+using CSFramework = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework;
 
 namespace FFXIVAccess;
 public partial class Plugin
@@ -44,25 +46,21 @@ public partial class Plugin
     }
   }
   public Dictionary<uint, HashSet<Vector3>> Walls = new Dictionary<uint, HashSet<Vector3>>();
-  private void rayArround()
+  private unsafe void rayArround()
   {
-    uint mapId = Service.MapManager.PlayerLocationMapID;
+    uint currentMapId = Service.MapManager.LoadedMapId;
     RaycastHit hit;
+    var flags = stackalloc int[] { 0x4000, 0, 0x4000, 0 };
+    Walls.TryAdd(currentMapId, new HashSet<Vector3>());
     foreach (Vector3 orientation in rayOrientations)
     {
-      BGCollisionModule.Raycast((clientState.LocalPlayer.Position + new Vector3(0, 1f, 0)), orientation, out hit, 1000);
+      CSFramework.Instance()->BGCollisionModule->RaycastEx(&hit, clientState.LocalPlayer.Position + new Vector3(0, 2f, 0), orientation, 10000, 0, flags);
+      //BGCollisionModule.Raycast((clientState.LocalPlayer.Position + new Vector3(0, 2f, 0)), orientation, out hit, 1000);
+      currentMapId = Service.MapManager.LoadedMapId;
       Vector3 roundPoint = Util.RoundVector3(hit.Point, 0);
-      Walls.TryAdd(mapId, new HashSet<Vector3>());
-      Walls[mapId].Add(roundPoint);
-      /*
-      if (Vector3.Distance(roundPoint, clientState.LocalPlayer.Position) <= 5)
-      {
-        soundSystem.channelWall.Set3DAttributes(hit.Point, default, default);
-        soundSystem.channelWall.Paused = false;
-      }
-      */
+      Walls[currentMapId].Add(roundPoint);
     }
-    //ScreenReader.Output($"{collisions.Count()}");
+    //ScreenReader.Output($"{Walls[mapId].Count()}");
   }
   public Vector3 findGround(Vector3 position)
   {

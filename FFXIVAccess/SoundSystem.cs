@@ -125,6 +125,7 @@ public class SoundSystem
   {
     if (WallMode)
     {
+      ScreenReader.Output(walls.Count().ToString());
       foreach (Vector3 wallPoint in walls)
       {
         float distance = Vector3.Distance(wallPoint, playerPosition);

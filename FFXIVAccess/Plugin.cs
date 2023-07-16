@@ -230,9 +230,9 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
       var currentMapWalls = new HashSet<System.Numerics.Vector3>();
       if (Walls.TryGetValue(Service.MapManager.PlayerLocationMapID, out currentMapWalls))
       {
-        soundSystem.setFollowMePlayingState(ref _lastPosition);
+        soundSystem.updateWallSounds(Service.MapManager.PlayerLocationMapID, _lastPosition, currentMapWalls);
       }
-      soundSystem.updateWallSounds(Service.MapManager.LoadedMapId, _lastPosition, currentMapWalls);
+      soundSystem.setFollowMePlayingState(ref _lastPosition);
     }
     soundSystem.System.Update();
   }
