@@ -55,6 +55,7 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
   [PluginService] public static ChatGui Chat { get; set; } = null!;
 
   private ConfigWindow ConfigWindow { get; init; }
+  public Dictionary<VirtualKey, Action<string, string>> keyActions { get; }
   private MainWindow MainWindow { get; init; }
   public SoundSystem soundSystem { get; private set; }
 
@@ -115,6 +116,14 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
     //NodeFocusChangedEvent += onNodeFocusChanged;
     soundSystem = new SoundSystem();
     ConfigWindow = new ConfigWindow(this);
+    keyActions = new Dictionary<VirtualKey, Action<string, string>>()
+    {
+      { VirtualKey.A, OnCommand },
+      { VirtualKey.Z, OnFind },
+      { VirtualKey.E, OnToggleFollowMe },
+      { VirtualKey.R, OnQuestCommand },
+      { VirtualKey.T, OnCurrentMapQuestLevelCommand }
+    };
     CommandManager.AddHandler("/test", new CommandInfo(OnCommand)
     {
       HelpMessage = ""
@@ -157,6 +166,7 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
   public unsafe void OnFrameworkUpdate(Dalamud.Game.Framework _)
   {
     nint addonPtr = nint.Zero;
+
     foreach (var entry in addonDict)
     {
       addonPtr = gameGui.GetAddonByName(entry.Key);
@@ -222,15 +232,6 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
       }
       if (keyState[VirtualKey.CONTROL])
       {
-        Dictionary<VirtualKey, Action<string, string>> keyActions = new Dictionary<VirtualKey, Action<string, string>>()
-{
-    { VirtualKey.A, OnCommand },
-    { VirtualKey.Z, OnFind },
-    { VirtualKey.E, OnToggleFollowMe },
-    { VirtualKey.R, OnQuestCommand },
-    { VirtualKey.T, OnCurrentMapQuestLevelCommand }
-};
-
         foreach (var kvp in keyActions)
         {
           if (keyState[kvp.Key])
