@@ -141,13 +141,6 @@ public partial class Plugin
   Thread thread = null;
   private unsafe void OnCommand(string command, string args)
   {
-    var text = "";
-    foreach(uint key in Walls.Keys.ToList())
-    {
-      text += ((int)key).ToString() + " ";
-    }
-    ScreenReader.Output($"{text}: {Service.MapManager.LoadedMapId}");
-    /*
     thread = new Thread(() =>
     {
       var result = searchFollowMePath(clientState.LocalPlayer.Position, 50);

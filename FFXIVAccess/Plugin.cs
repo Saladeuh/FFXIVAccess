@@ -220,6 +220,26 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
         soundSystem.WallMode = !soundSystem.WallMode;
         keyState[VirtualKey.G] = false;
       }
+      if (keyState[VirtualKey.CONTROL])
+      {
+        Dictionary<VirtualKey, Action<string, string>> keyActions = new Dictionary<VirtualKey, Action<string, string>>()
+{
+    { VirtualKey.A, OnCommand },
+    { VirtualKey.Z, OnFind },
+    { VirtualKey.E, OnToggleFollowMe },
+    { VirtualKey.R, OnQuestCommand },
+    { VirtualKey.T, OnCurrentMapQuestLevelCommand }
+};
+
+        foreach (var kvp in keyActions)
+        {
+          if (keyState[kvp.Key])
+          {
+            kvp.Value("", "");
+            keyState[kvp.Key] = false;
+          }
+        }
+      }
     }
     if (this.clientState.LocalPlayer != null)
     {
@@ -237,28 +257,28 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
     soundSystem.System.Update();
   }
   /*
-private void onChat(XivChatType type, uint senderId, ref SeString sender, ref SeString message, ref bool isHandled)
-{
-  string senderText = sender.TextValue;
-  string messageText = message.TextValue;
-  string typeText= type.ToString();
-  if (senderText.Substring(1).All(char.IsDigit))
+  private void onChat(XivChatType type, uint senderId, ref SeString sender, ref SeString message, ref bool isHandled)
   {
-    senderText= string.Empty;
+    string senderText = sender.TextValue;
+    string messageText = message.TextValue;
+    string typeText= type.ToString();
+    if (senderText.Substring(1).All(char.IsDigit))
+    {
+      senderText= string.Empty;
+    }
+    if (typeText.IsNullOrEmpty())
+    {
+      ScreenReader.Output(message.TextValue);
+    }
+    else if (type == XivChatType.Echo)
+    {
+      ScreenReader.Output($"{sender.TextValue}: {message.TextValue}");
+    } else
+    {
+      ScreenReader.Output($"{sender.TextValue} {type} : {message.TextValue}");
+    }
   }
-  if (typeText.IsNullOrEmpty())
-  {
-    ScreenReader.Output(message.TextValue);
-  }
-  else if (type == XivChatType.Echo)
-  {
-    ScreenReader.Output($"{sender.TextValue}: {message.TextValue}");
-  } else
-  {
-    ScreenReader.Output($"{sender.TextValue} {type} : {message.TextValue}");
-  }
-}
-    */
+      */
   public void Dispose()
   {
     this.framework.Update -= OnFrameworkUpdate;
