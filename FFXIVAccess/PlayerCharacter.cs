@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Dalamud.Game.ClientState.Keys;
 using FFXIVClientStructs.FFXIV.Client.Game.Event;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Common.Component.BGCollision;
 using FmodAudio.DigitalSignalProcessing;
 using FmodAudio.DigitalSignalProcessing.Effects;
@@ -32,7 +33,7 @@ public partial class Plugin
       var levelObj = gameObjects.FirstOrDefault(o => (Vector3.Distance(o.Position, levelVector) <= 2 && o.ObjectId != clientState.LocalPlayer.ObjectId));
       if (levelObj != null)
       {
-        targetManager.SetTarget(levelObj);
+        targetManager.Target=levelObj;
       }
     }
     else if (level.Object > 2000000) // event object
@@ -41,7 +42,7 @@ public partial class Plugin
       var levelObj = gameObjects.FirstOrDefault(o => o.Name.ToString().Contains(levelObjName));
       if (levelObj != null)
       {
-        targetManager.SetTarget(levelObj);
+        targetManager.Target=levelObj;
       }
     }
   }
@@ -52,14 +53,15 @@ public partial class Plugin
     RaycastHit hit;
     var flags = stackalloc int[] { 0x4000, 0, 0x4000, 0 };
     Walls.TryAdd(currentMapId, new HashSet<Vector3>());
-    foreach (Vector3 orientation in rayOrientations)
-    {
-      CSFramework.Instance()->BGCollisionModule->RaycastEx(&hit, clientState.LocalPlayer.Position + new Vector3(0, 2f, 0), orientation, 10000, 0, flags);
-      //BGCollisionModule.Raycast((clientState.LocalPlayer.Position + new Vector3(0, 2f, 0)), orientation, out hit, 1000);
-      currentMapId = Service.MapManager.LoadedMapId;
-      Vector3 roundPoint = Util.RoundVector3(hit.Point, 0);
-      Walls[currentMapId].Add(roundPoint);
-    }
+    //foreach (Vector3 orientation in rayOrientations)
+    //{
+    var orientation = Util.ConvertOrientationToVector(this.clientState.LocalPlayer.Rotation);
+    CSFramework.Instance()->BGCollisionModule->RaycastEx(&hit, clientState.LocalPlayer.Position + new Vector3(0, 2f, 0), orientation, 10000, 4, flags);
+    ////BGCollisionModule.Raycast((clientState.LocalPlayer.Position + new Vector3(0, 2f, 0)), orientation, out hit, 1000);
+    currentMapId = Service.MapManager.LoadedMapId;
+    Vector3 roundPoint = Util.RoundVector3(hit.Point, 0);
+    Walls[currentMapId].Add(roundPoint);
+    //}
     //ScreenReader.Output($"{Walls[mapId].Count()}");
   }
   public Vector3 findGround(Vector3 position)

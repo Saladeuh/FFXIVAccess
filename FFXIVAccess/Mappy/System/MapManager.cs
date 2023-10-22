@@ -7,6 +7,7 @@ using Dalamud.Game;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Logging;
+using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using ImGuiScene;
 using Lumina.Excel.GeneratedSheets;
@@ -47,7 +48,7 @@ public unsafe class MapManager : IDisposable
     Service.Framework.Update -= OnFrameworkUpdate;
   }
 
-  private void OnFrameworkUpdate(Framework framework)
+  private void OnFrameworkUpdate(IFramework framework)
   {
     if (MapAgent is null) return;
     if (Service.Condition[ConditionFlag.BetweenAreas] || Service.Condition[ConditionFlag.BetweenAreas51]) return;

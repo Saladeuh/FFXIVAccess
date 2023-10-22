@@ -1,6 +1,7 @@
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.Types;
+using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FmodAudio;
 using FmodAudio.Base;
@@ -59,7 +60,7 @@ public class SoundSystem
     channelShortFollowMe.Set3DMinMaxDistance(0f, 60f);
   }
   public bool WallMode = false;
-  public void scanMapObject(ObjectTable gameObjects, Character localPlayer, uint mapId)
+  public void scanMapObject(IObjectTable gameObjects, Character localPlayer, uint mapId)
   {
     foreach (GameObject t in gameObjects)
     {
@@ -125,7 +126,7 @@ public class SoundSystem
   {
     if (WallMode)
     {
-      ScreenReader.Output(walls.Count().ToString());
+      //ScreenReader.Output(walls.Count().ToString());
       foreach (Vector3 wallPoint in walls)
       {
         float distance = Vector3.Distance(wallPoint, playerPosition);

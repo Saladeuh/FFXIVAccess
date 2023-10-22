@@ -7,12 +7,14 @@ using System.Threading;
 using Dalamud.Game.ClientState.Keys;
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.Utility;
+using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Common.Component.BGCollision;
 using FFXIVClientStructs.FFXIV.Common.Math;
 using Lumina.Data.Parsing.Scd;
 using Lumina.Excel.GeneratedSheets;
 using Mappy;
+using Mappy.DataModels;
 using Mappy.Utilities;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -23,14 +25,12 @@ public partial class Plugin
   private unsafe void OnCurrentMapQuestLevelCommand(string command, string args)
   {
     var currentMapId = Service.MapManager.PlayerLocationMapID;
-    var questArray = FFXIVClientStructs.FFXIV.Client.Game.QuestManager.Instance()->Quest;
+    var questArray = FFXIVClientStructs.FFXIV.Client.Game.QuestManager.Instance()->NormalQuestsSpan;
     var acceptedQuests = Service.QuestManager.GetAcceptedQuests();
     for (int i = 0; i <= 100; i++)
     {
       var qStruct = questArray[i];
-      if (qStruct != null)
-      {
-        int id = qStruct->QuestID;
+        int id = qStruct.QuestId;
         foreach (var extQuest in acceptedQuests)
         {
           if (extQuest.QuestID == id)
@@ -89,7 +89,6 @@ public partial class Plugin
             }
           }
         }
-      }
     }
   }
 
@@ -97,15 +96,13 @@ public partial class Plugin
   private unsafe void OnQuestCommand(string command, string args)
   {
     // send all quests and details
-    var questArray = FFXIVClientStructs.FFXIV.Client.Game.QuestManager.Instance()->Quest;
+    var questArray = FFXIVClientStructs.FFXIV.Client.Game.QuestManager.Instance()->NormalQuestsSpan;
     var accepted = FFXIVClientStructs.FFXIV.Client.Game.QuestManager.Instance()->NumAcceptedQuests.ToString();
     var acceptedQuests = Service.QuestManager.GetAcceptedQuests();
     for (int i = 0; i <= 100; i++)
     {
       var q = questArray[i];
-      if (q != null)
-      {
-        int id = q->QuestID;
+      int id = q.QuestId;
         foreach (var extQuest in acceptedQuests)
         {
           if (extQuest.QuestID == id)
@@ -121,7 +118,6 @@ public partial class Plugin
             }
           }
         }
-      }
     }
   }
   private unsafe void OnToggleFollowMe(string command, string args)
@@ -135,7 +131,7 @@ public partial class Plugin
       if (o.Name.TextValue.ToLower().Contains(args.ToLower()))
       {
         soundSystem.updateFollowMe(o.Position, 3f, 300f);
-        targetManager.SetTarget(o);
+        targetManager.Target=o;
         ScreenReader.Output(o.Name.ToString());
       }
     }

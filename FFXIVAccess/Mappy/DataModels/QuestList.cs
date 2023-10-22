@@ -1,7 +1,6 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using GameQuestManager = FFXIVClientStructs.FFXIV.Client.Game.QuestManager;
-using GameQuestList = FFXIVClientStructs.FFXIV.Client.Game.QuestManager.QuestListArray;
 
 namespace Mappy.DataModels;
 
@@ -14,7 +13,7 @@ public class QuestList : IEnumerable<QuestExtended>
 
 public unsafe class QuestListEnumerator : IEnumerator<QuestExtended>
 {
-    private GameQuestList GameQuestList => GameQuestManager.Instance()->Quest;
+    private byte* GameQuestList => GameQuestManager.Instance()->NormalQuests;
     private int currentPosition = -1;
     private const int Maximum = 30;
 
