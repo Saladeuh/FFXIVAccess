@@ -101,7 +101,7 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
     //chat.ChatMessage += onChat;
     itemList = dataManager.GetExcelSheet<Item>();
     questList = dataManager.GetExcelSheet<CustomQuestSheet>();
-    var contextMenu = new DalamudContextMenu();
+    var contextMenu = new DalamudContextMenu(pluginInterface);
     contextMenu.OnOpenGameObjectContextMenu += OpenGameObjectContextMenu;
     contextMenu.OnOpenInventoryContextMenu += OpenInventory;
     framework.Update += OnFrameworkUpdate;
