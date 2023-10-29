@@ -27,6 +27,10 @@ using Lumina.Excel.GeneratedSheets;
 using Mappy;
 using Mappy.System;
 using Dalamud.Plugin.Services;
+using Dalamud.Game.Addon.Lifecycle;
+using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
+using Dalamud.Game.Addon.Events;
+using static FFXIVClientStructs.FFXIV.Client.UI.AddonRelicNoteBook;
 
 namespace FFXIVAccess;
 public unsafe sealed partial class Plugin : IDalamudPlugin
@@ -38,6 +42,8 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
   private DalamudPluginInterface PluginInterface { get; init; }
   private ICommandManager CommandManager { get; init; }
   private IDataManager dataManager { get; init; }
+  public IAddonLifecycle addonLifeCycle { get; }
+  public IAddonEventManager AddonEventManager { get; }
   public IFramework framework { get; set; }
   private IFlyTextGui flyTextGui { get; init; }
   public IKeyState keyState { get; private set; }
@@ -75,7 +81,10 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
     ITitleScreenMenu titleScreenMenu,
     IObjectTable gameObjects,
     IDataManager dataManager,
-    ITargetManager targetManager)
+    ITargetManager targetManager,
+  IAddonLifecycle addonLifeCycle,
+  IAddonEventManager addonEventManager
+    )
   {
     ScreenReader.Load(pluginInterface.InternalName, Version);
     ScreenReader.Output("Screen Reader ready");
@@ -94,6 +103,8 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
     this.gameObjects = gameObjects;
     this.gameGui = gameGui;
     this.targetManager = targetManager;
+    this.addonLifeCycle = addonLifeCycle;
+    AddonEventManager = addonEventManager;
     this.questManager = new QuestManager();
     this.toastGui = toastGui;
     Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
@@ -109,12 +120,14 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
     flyTextGui.FlyTextCreated += onFlyTextCreated;
     gameGui.HoveredActionChanged += onHoveredActionChanged;
     gameGui.HoveredItemChanged += onHoveredItemChange;
+    //addonLifeCycle.RegisterListener(AddonEvent.PreFinalize, OnPostRefresh);
+    addonLifeCycle.RegisterListener(AddonEvent.PostSetup, OnPostRefresh);
+    //addonLifeCycle.RegisterListener(AddonEvent.PostSetup, addonDict.Keys, OnPostSetup);
     this.keyState = keyState;
     toastGui.Toast += onToast;
     toastGui.ErrorToast += onErrorToast;
     toastGui.QuestToast += onQuestToast;
     NewAddonOpenedEvent += onSelectString;
-    //NodeFocusChangedEvent += onNodeFocusChanged;
     soundSystem = new SoundSystem();
     ConfigWindow = new ConfigWindow(this);
     keyActions = new Dictionary<VirtualKey, Action<string, string>>()
@@ -150,6 +163,49 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
     PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
   }
 
+  private void OnPostSetup(AddonEvent type, AddonArgs args)
+  {
+    var addon = (AtkUnitBase*)args.Addon;
+    for (int i = 0; i < addon->UldManager.NodeListCount; i++)
+    {
+      var node = addon->UldManager.NodeList[i];
+      AddonEventManager.AddEvent((nint)addon, (nint)node, AddonEventType.FocusStart, TextHandler);
+      AddonEventManager.AddEvent((nint)addon, (nint)node, AddonEventType.MouseOver, TextHandler);
+    }
+  }
+  private void TextHandler(AddonEventType type, IntPtr addon, IntPtr node)
+  {
+    var text = "";
+    var parentNode = ((AtkResNode*)node)->ParentNode;
+    var nbchilds = parentNode->ChildCount;
+    var child = (AtkResNode*)parentNode->ChildNode;
+    for (int i = 0; i < nbchilds; i++)
+    {
+      if (child != null)
+      {
+        if (child->Type == NodeType.Text)
+        {
+          text += child->GetAsAtkTextNode()->NodeText.ToString();
+        }
+        child = child->NextSiblingNode;
+      }
+    }
+    ScreenReader.Output(text);
+  }
+  private void OnPostRefresh(AddonEvent type, AddonArgs args)
+  {
+    if (args is AddonSetupArgs setupArgs)
+    {
+      //ScreenReader.Output(refreshArgs.AddonName);
+      onSelectString(args.Addon, args.AddonName);
+    }
+    else if (args is AddonFinalizeArgs finalArgs)
+    {
+      //ScreenReader.Output(finalArgs.AddonName);
+      onSelectString(args.Addon, args.AddonName);
+    }
+  }
+
   private void onTerritoryChanged(ushort e)
   {
     ScreenReader.Output(soundSystem.ObjChannels.Count().ToString());
@@ -166,6 +222,7 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
   bool isHealed = true;
   public unsafe void OnFrameworkUpdate(IFramework _)
   {
+    /*
     nint addonPtr = nint.Zero;
 
     foreach (var entry in addonDict)
@@ -178,6 +235,7 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
       }
       _lastAddons[entry.Key] = addonPtr;
     }
+    */
     /*
     var focusedNode = AtkStage.GetSingleton()->GetFocus();
     if ((_lastFocusedNode!=null && focusedNode!=null && _lastFocusedNode.Value.NodeID != focusedNode->NodeID) || focusedNode!=null)
@@ -193,7 +251,7 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
       var flags = stackalloc int[] { 0x4000, 0, 0x4000, 0 };
       var orientation = Util.ConvertOrientationToVector(this.clientState.LocalPlayer.Rotation);
       CSFramework.Instance()->BGCollisionModule->RaycastEx(&hit, clientState.LocalPlayer.Position + new System.Numerics.Vector3(0, 2f, 0), orientation, 10000, 1, flags);
-      if ((position == _lastPosition || Vector3.Distance(position, hit.Point)<=0.2) && tryingToMove())
+      if ((position == _lastPosition || Vector3.Distance(position, hit.Point) <= 0.2) && tryingToMove())
       {
         if (_banging)
         {
@@ -299,6 +357,7 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
     CommandManager.RemoveHandler("/find");
     CommandManager.RemoveHandler("/tfm");
     CommandManager.RemoveHandler("/currentmapquest");
+    addonLifeCycle.UnregisterListener(OnPostRefresh);
   }
 
   private void DrawUI()
