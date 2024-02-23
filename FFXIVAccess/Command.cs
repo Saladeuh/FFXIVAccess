@@ -13,9 +13,6 @@ using FFXIVClientStructs.FFXIV.Common.Component.BGCollision;
 using FFXIVClientStructs.FFXIV.Common.Math;
 using Lumina.Data.Parsing.Scd;
 using Lumina.Excel.GeneratedSheets;
-using Mappy;
-using Mappy.DataModels;
-using Mappy.Utilities;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace FFXIVAccess;

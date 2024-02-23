@@ -15,7 +15,6 @@ using FFXIVClientStructs.FFXIV.Common.Component.BGCollision;
 using FmodAudio.DigitalSignalProcessing;
 using FmodAudio.DigitalSignalProcessing.Effects;
 using Lumina.Excel.GeneratedSheets;
-using Mappy;
 using CSFramework = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework;
 
 namespace FFXIVAccess;
@@ -152,7 +151,7 @@ public partial class Plugin
     return searchFollowMePath(start, acceptanceRay, result);
     //return searchFollowMePath(result.SkipLast(result.Count()/2).ToList());
   }
-  private List<Vector3> extractPath(List<Point> searchResult)
+  private static List<Vector3> extractPath(List<Point> searchResult)
   {
     var path = new List<Vector3>();
     var currentPoint = Point.pathEnd;
