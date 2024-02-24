@@ -7,7 +7,7 @@ using Dalamud.Game;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.ClientState.Keys;
 using Dalamud.Game.ClientState.Objects;
-using Dalamud.Game.Command;
+using Dalamud.Game;
 using Dalamud.Game.Gui;
 using Dalamud.Game.Gui.FlyText;
 using Dalamud.Game.Gui.Toast;
@@ -26,6 +26,8 @@ using FFXIVClientStructs.FFXIV.Component.GUI;
 using Lumina.Excel.GeneratedSheets;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using Mappy;
+using Dalamud.Game.Command;
 
 namespace FFXIVAccess;
 public unsafe sealed partial class Plugin : IDalamudPlugin
@@ -48,7 +50,7 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
   private ITitleScreenMenu titleScreenMenu { get; set; }
   public IClientState clientState { get; private set; }
   private IToastGui toastGui { get; set; }
-  public QuestManager questManager = null!;
+  public QuestManager? questManager = null!;
   public ITargetManager targetManager = null;
   public Configuration Configuration { get; init; }
   public WindowSystem WindowSystem = new("SamplePlugin");
@@ -80,11 +82,7 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
     ScreenReader.Output("Screen Reader ready");
     // Mappy services
     PluginInterface = pluginInterface;
-    pluginInterface.Create<Service>();
-    Service.Cache = new CompositeLuminaCache();
-    Service.ModuleManager = new ModuleManager();
-    Service.QuestManager = new QuestManager();
-    Service.MapManager = new MapManager();
+    var mappyPlugin = new MappyPlugin(PluginInterface);
     CommandManager = commandManager;
     this.titleScreenMenu = titleScreenMenu;
     this.clientState = clientState;
@@ -100,7 +98,7 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
     //chat.ChatMessage += onChat;
     itemList = dataManager.GetExcelSheet<Item>();
     questList = dataManager.GetExcelSheet<CustomQuestSheet>();
-    var contextMenu = new DalamudContextMenu();
+    var contextMenu = new DalamudContextMenu(this.PluginInterface);
     contextMenu.OnOpenGameObjectContextMenu += OpenGameObjectContextMenu;
     contextMenu.OnOpenInventoryContextMenu += OpenInventory;
     framework.Update += OnFrameworkUpdate;
@@ -151,11 +149,15 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
 
   private void onTerritoryChanged(ushort e)
   {
+    this.currentTerritory = e;
     ScreenReader.Output(soundSystem.ObjChannels.Count().ToString());
     soundSystem.cleanObjChannel();
   }
   private RaptureAtkModule* RaptureAtkModule => CSFramework.Instance()->GetUiModule()->GetRaptureAtkModule();
   private bool IsTextInputActive => RaptureAtkModule->AtkModule.IsTextInputActive();
+
+  public ushort currentTerritory { get; private set; }
+
   private nint FocusedAddon = nint.Zero;
   private AtkResNode? _lastFocusedNode;
   SortedDictionary<string, nint> _lastAddons = new SortedDictionary<string, nint>();
@@ -251,12 +253,12 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
       var rotation = this.clientState.LocalPlayer.Rotation;
       soundSystem.System.Set3DListenerAttributes(0, clientState.LocalPlayer.Position, default, Util.ConvertOrientationToVector(rotation), soundSystem.Up);
       soundSystem.scanMapObject(
-        this.gameObjects, clientState.LocalPlayer, Service.MapManager.LoadedMapId);
+        this.gameObjects, clientState.LocalPlayer, this.currentTerritory);
       soundSystem.GPSUpdate(clientState.LocalPlayer.Position);
       var currentMapWalls = new HashSet<System.Numerics.Vector3>();
-      if (Walls.TryGetValue(Service.MapManager.PlayerLocationMapID, out currentMapWalls))
+      if (Walls.TryGetValue(currentTerritory, out currentMapWalls))
       {
-        soundSystem.updateWallSounds(Service.MapManager.PlayerLocationMapID, _lastPosition, currentMapWalls);
+        soundSystem.updateWallSounds(currentTerritory, _lastPosition, currentMapWalls);
       }
       soundSystem.setFollowMePlayingState(ref _lastPosition);
     }

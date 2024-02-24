@@ -929,6 +929,16 @@
           "System.Threading": "4.3.0",
           "System.Xml.ReaderWriter": "4.3.0"
         }
+      },
+      "kamilib": {
+        "type": "Project"
+      },
+      "mappy": {
+        "type": "Project",
+        "dependencies": {
+          "DalamudPackager": "[2.1.12, )",
+          "KamiLib": "[1.0.0, )"
+        }
       }
     }
   }

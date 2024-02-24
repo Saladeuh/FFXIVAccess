@@ -13,6 +13,8 @@ using FFXIVClientStructs.FFXIV.Common.Component.BGCollision;
 using FFXIVClientStructs.FFXIV.Common.Math;
 using Lumina.Data.Parsing.Scd;
 using Lumina.Excel.GeneratedSheets;
+using Mappy.System;
+using Mappy.Utility;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace FFXIVAccess;
@@ -21,24 +23,25 @@ public partial class Plugin
   
   private unsafe void OnCurrentMapQuestLevelCommand(string command, string args)
   {
-    var currentMapId = Service.MapManager.PlayerLocationMapID;
+    var currentMapId = this.currentTerritory;
+      //Service.MapManager.PlayerLocationMapID;
     var questArray = FFXIVClientStructs.FFXIV.Client.Game.QuestManager.Instance()->NormalQuestsSpan;
-    var acceptedQuests = Service.QuestManager.GetAcceptedQuests();
+    var acceptedQuests = QuestHelpers.GetAcceptedQuests();
     for (int i = 0; i <= 100; i++)
     {
       var qStruct = questArray[i];
         int id = qStruct.QuestId;
         foreach (var extQuest in acceptedQuests)
         {
-          if (extQuest.QuestID == id)
+          if (extQuest.QuestId == id)
           {
             id += 65536;
             var name = questList.GetRow((uint)id).Name;
-            var text = $"{name}: {Service.QuestManager.GetActiveLevelIndexes(extQuest).Count()}";
+            var text = $"{name}: {QuestHelpers.GetActiveLevelsForQuest(name, this.currentTerritory).Count()}";
             var text2 = "";
             if (name.ToString().Contains(args))
             {
-              foreach (var level in Service.QuestManager.GetLevelsForQuest(extQuest))
+              foreach (var level in QuestHelpers.GetActiveLevelsForQuest(name,this.currentTerritory))
               {
                 var levelPlace = level.Map.Value.RowId;
                 if (currentMapId == levelPlace)
@@ -95,24 +98,20 @@ public partial class Plugin
     // send all quests and details
     var questArray = FFXIVClientStructs.FFXIV.Client.Game.QuestManager.Instance()->NormalQuestsSpan;
     var accepted = FFXIVClientStructs.FFXIV.Client.Game.QuestManager.Instance()->NumAcceptedQuests.ToString();
-    var acceptedQuests = Service.QuestManager.GetAcceptedQuests();
+    var acceptedQuests = QuestHelpers.GetAcceptedQuests();
     for (int i = 0; i <= 100; i++)
     {
       var q = questArray[i];
       int id = q.QuestId;
         foreach (var extQuest in acceptedQuests)
         {
-          if (extQuest.QuestID == id)
+          if (extQuest.QuestId == id)
           {
             id += 65536;
             var name = questList.GetRow((uint)id).Name;
             var place = questList.GetRow((uint)id).PlaceName.Value.Name;
-            ScreenReader.Output($"{name}: {place} {Service.QuestManager.GetLevelsForQuest(extQuest).Count()} {Service.MapManager.LoadedMapId}");
-            foreach (var level in Service.QuestManager.GetLevelsForQuest(extQuest))
-            {
-              var levelPlace = level.Map.Value.GetName();
-              ScreenReader.Output($"{levelPlace}");
-            }
+            ScreenReader.Output($"{name}: {place} {QuestHelpers.GetActiveLevelsForQuest(name,this.currentTerritory).Count()} {this.currentTerritory}");
+ 
           }
         }
     }

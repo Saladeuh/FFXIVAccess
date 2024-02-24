@@ -83,6 +83,8 @@
     <PackageReference Include="Dalamud.ContextMenu" Version="1.3.1" />
     <PackageReference Include="DalamudPackager" Version="2.1.12" />
     <PackageReference Include="SharpDX.Mathematics" Version="4.2.0" />
+    <ProjectReference Include="..\Mappy\KamiLib\KamiLib.csproj" />
+    <ProjectReference Include="..\Mappy\Mappy\Mappy.csproj" />
     <Reference Include="FFXIVClientStructs">
       <HintPath>$(DalamudLibPath)FFXIVClientStructs.dll</HintPath>
       <Private>false</Private>
