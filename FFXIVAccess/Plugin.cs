@@ -2,22 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dalamud.ContextMenu;
-using Dalamud.Data;
-using Dalamud.Game;
-using Dalamud.Game.ClientState;
 using Dalamud.Game.ClientState.Keys;
 using Dalamud.Game.ClientState.Objects;
-using Dalamud.Game;
-using Dalamud.Game.Gui;
-using Dalamud.Game.Gui.FlyText;
-using Dalamud.Game.Gui.Toast;
 using Dalamud.Game.Text.SeStringHandling;
-using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using FFXIVAccess.Windows;
-using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using CSFramework = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Common.Component.BGCollision;
@@ -29,15 +20,17 @@ using FFXIVClientStructs.FFXIV.Client.Game;
 using Mappy;
 using Dalamud.Game.Command;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
-using Lumina.Excel.GeneratedSheets2;r
+using Dalamud.Game.Addon.Lifecycle;
+using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
+using Dalamud.Game.Addon.Events;
 
 namespace FFXIVAccess;
-public unsafe sealed partial class Plugin : IDalamudPlugin
+public sealed unsafe partial class Plugin : IDalamudPlugin
 {
-  public string Name => "FFXIVAccess";
-  public string Version => "0.0.0";
-  public static Lumina.Excel.ExcelSheet<CustomQuestSheet> questList;
-  private Lumina.Excel.ExcelSheet<Lumina.Excel.GeneratedSheets.Item> itemList;
+  public static string Name => "FFXIVAccess";
+  public static string Version => "0.0.0";
+  private static Lumina.Excel.ExcelSheet<CustomQuestSheet> QuestList;
+  private readonly Lumina.Excel.ExcelSheet<Lumina.Excel.GeneratedSheets.Item> itemList;
   private DalamudPluginInterface PluginInterface { get; init; }
   private ICommandManager CommandManager { get; init; }
   private IDataManager dataManager { get; init; }
@@ -55,7 +48,7 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
   public IClientState clientState { get; private set; }
   private IToastGui toastGui { get; set; }
   public QuestManager? questManager = null!;
-  public ITargetManager targetManager = null;
+  public ITargetManager targetManager;
   public Configuration Configuration { get; init; }
   public WindowSystem WindowSystem = new("SamplePlugin");
   [PluginService] public static IChatGui Chat { get; set; } = null!;
@@ -65,8 +58,8 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
   private MainWindow MainWindow { get; init; }
   public SoundSystem soundSystem { get; private set; }
 
-  public event Action<nint, string> NewAddonOpenedEvent;
-  public event Action<AtkResNode?> NodeFocusChangedEvent;
+  public event Action<nint, string> OnNewAddonOpenedEvent;
+  public event Action<AtkResNode?> OnNodeFocusChangedEvent;
   public Plugin(
     [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
     IChatGui chat,
@@ -105,8 +98,8 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
     Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
     Configuration.Initialize(PluginInterface);
     //chat.ChatMessage += onChat;
-    itemList = dataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>();
-    questList = dataManager.GetExcelSheet<CustomQuestSheet>();
+    itemList = dataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!;
+    QuestList = dataManager.GetExcelSheet<CustomQuestSheet>()!;
     var contextMenu = new DalamudContextMenu(this.PluginInterface);
     contextMenu.OnOpenGameObjectContextMenu += OpenGameObjectContextMenu;
     contextMenu.OnOpenInventoryContextMenu += OpenInventory;
@@ -122,7 +115,7 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
     toastGui.Toast += onToast;
     toastGui.ErrorToast += onErrorToast;
     toastGui.QuestToast += onQuestToast;
-    NewAddonOpenedEvent += onSelectString;
+    OnNewAddonOpenedEvent += onSelectString;
     soundSystem = new SoundSystem();
     ConfigWindow = new ConfigWindow(this);
     keyActions = new Dictionary<VirtualKey, Action<string, string>>()
@@ -149,7 +142,7 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
     {
       HelpMessage = "A useful message to display in /xlhelp"
     });
-  CommandManager.AddHandler("/currentmapquest", new CommandInfo(OnCurrentMapQuestLevelCommand)
+    CommandManager.AddHandler("/currentmapquest", new CommandInfo(OnCurrentMapQuestLevelCommand)
     {
       HelpMessage = "A useful message to display in /xlhelp"
     });
@@ -161,7 +154,7 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
   private void OnPostSetup(AddonEvent type, AddonArgs args)
   {
     var addon = (AtkUnitBase*)args.Addon;
-    for (int i = 0; i < addon->UldManager.NodeListCount; i++)
+    for (var i = 0; i < addon->UldManager.NodeListCount; i++)
     {
       var node = addon->UldManager.NodeList[i];
       AddonEventManager.AddEvent((nint)addon, (nint)node, AddonEventType.FocusStart, TextHandler);
@@ -174,7 +167,7 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
     var parentNode = ((AtkResNode*)node)->ParentNode;
     var nbchilds = parentNode->ChildCount;
     var child = (AtkResNode*)parentNode->ChildNode;
-    for (int i = 0; i < nbchilds; i++)
+    for (var i = 0; i < nbchilds; i++)
     {
       if (child != null)
       {
@@ -192,7 +185,7 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
     if (args is AddonSetupArgs setupArgs)
     {
       //ScreenReader.Output(refreshArgs.AddonName);
-      onSelectString(args.Addon, args.AddonName);
+      this.onSelectString(args.Addon, args.AddonName);
     }
     else if (args is AddonFinalizeArgs finalArgs)
     {
@@ -203,24 +196,27 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
 
   private void onTerritoryChanged(ushort e)
   {
-    ScreenReader.Output(soundSystem.ObjChannels.Count().ToString());
+    ScreenReader.Output(soundSystem.ObjChannels.Count.ToString());
     soundSystem.cleanObjChannel();
   }
   private RaptureAtkModule* RaptureAtkModule => CSFramework.Instance()->GetUiModule()->GetRaptureAtkModule();
   private bool IsTextInputActive => RaptureAtkModule->AtkModule.IsTextInputActive();
 
-  public uint currentMapId { get
+  public uint currentMapId
+  {
+    get
     {
       return AgentMap.Instance()->CurrentMapId;
-    } }
+    }
+  }
 
-  private nint FocusedAddon = nint.Zero;
+  private readonly nint focusedAddon = nint.Zero;
   private AtkResNode? _lastFocusedNode;
-  SortedDictionary<string, nint> _lastAddons = new SortedDictionary<string, nint>();
+  private readonly SortedDictionary<string, nint> _lastAddons = [];
   private System.Numerics.Vector3 _lastPosition;
   private bool _banging = false;
-  DateTime lastTime = DateTime.Now;
-  bool isHealed = true;
+  private DateTime lastTime = DateTime.Now;
+  private bool isHealed = true;
   public unsafe void OnFrameworkUpdate(IFramework _)
   {
     /*
@@ -256,7 +252,7 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
       {
         if (_banging)
         {
-          DateTime now = DateTime.Now;
+          var now = DateTime.Now;
           if (now.Subtract(lastTime).TotalMilliseconds >= 650)
           {
             UIModule.PlayChatSoundEffect(16);

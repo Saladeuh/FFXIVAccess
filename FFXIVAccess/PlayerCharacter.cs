@@ -20,7 +20,7 @@ using CSFramework = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework;
 namespace FFXIVAccess;
 public partial class Plugin
 {
-  private List<Vector3> rayOrientations = new List<Vector3> { new Vector3(1, 0, 0), new Vector3(-1, 0, 0), new Vector3(0, 0, 1), new Vector3(0, 0, -1) };
+  private readonly List<Vector3> rayOrientations = [new Vector3(1, 0, 0), new Vector3(-1, 0, 0), new Vector3(0, 0, 1), new Vector3(0, 0, -1)];
   private bool tryingToMove()
   {
     return (keyState[VirtualKey.A] || keyState[VirtualKey.E] || keyState[VirtualKey.Z] || keyState[VirtualKey.S]);
@@ -29,44 +29,43 @@ public partial class Plugin
   {
     if (level.Object >= 1000000) // event NPC
     {
-      var levelObj = gameObjects.FirstOrDefault(o => (Vector3.Distance(o.Position, levelVector) <= 2 && o.ObjectId != clientState.LocalPlayer.ObjectId));
+      var levelObj = gameObjects.FirstOrDefault(o => (Vector3.Distance(o.Position, levelVector) <= 2 && o.ObjectId != clientState.LocalPlayer!.ObjectId));
       if (levelObj != null)
       {
-        targetManager.Target=levelObj;
+        targetManager.Target = levelObj;
       }
     }
     else if (level.Object > 2000000) // event object
     {
-      var levelObjName = dataManager.GetExcelSheet<EObjName>().GetRow(level.Object).Singular.ToString();
+      var levelObjName = dataManager.GetExcelSheet<EObjName>().GetRow(level.Object)!.Singular.ToString();
       var levelObj = gameObjects.FirstOrDefault(o => o.Name.ToString().Contains(levelObjName));
       if (levelObj != null)
       {
-        targetManager.Target=levelObj;
+        targetManager.Target = levelObj;
       }
     }
   }
-  public Dictionary<uint, HashSet<Vector3>> Walls = new Dictionary<uint, HashSet<Vector3>>();
+  public Dictionary<uint, HashSet<Vector3>> Walls = [];
   private unsafe void rayArround()
   {
-    uint currentMapId = this.currentMapId;
+    var currentMapId = this.currentMapId;
     RaycastHit hit;
     var flags = stackalloc int[] { 0x4000, 0, 0x4000, 0 };
-    Walls.TryAdd(currentMapId, new HashSet<Vector3>());
+    Walls.TryAdd(currentMapId, []);
     //foreach (Vector3 orientation in rayOrientations)
     //{
-    var orientation = Util.ConvertOrientationToVector(this.clientState.LocalPlayer.Rotation);
+    var orientation = Util.ConvertOrientationToVector(this.clientState.LocalPlayer!.Rotation);
     CSFramework.Instance()->BGCollisionModule->RaycastEx(&hit, clientState.LocalPlayer.Position + new Vector3(0, 2f, 0), orientation, 10000, 4, flags);
     ////BGCollisionModule.Raycast((clientState.LocalPlayer.Position + new Vector3(0, 2f, 0)), orientation, out hit, 1000);
     currentMapId = this.currentMapId;
-    Vector3 roundPoint = Util.RoundVector3(hit.Point, 0);
+    var roundPoint = Util.RoundVector3(hit.Point, 0);
     Walls[currentMapId].Add(roundPoint);
     //}
     //ScreenReader.Output($"{Walls[mapId].Count()}");
   }
-  public Vector3 findGround(Vector3 position)
+  public static Vector3 findGround(Vector3 position)
   {
-    RaycastHit roof;
-    BGCollisionModule.Raycast(position, new Vector3(0, 1, 0), out roof, 1000);// ray to the sky
+    BGCollisionModule.Raycast(position, new Vector3(0, 1, 0), out var roof, 1000);// ray to the sky
     RaycastHit hit;
     if (roof.Point != new Vector3(0, 0, 0)) // indoor
     {
@@ -78,49 +77,41 @@ public partial class Plugin
     }
     return hit.Point;
   }
-  public class Point
+  public class Point(Vector3 position, Point? origin = null)
   {
-    public Vector3 Position { get; set; }
-    public Point? Origin { get; set; }
-    public static Point pathEnd { get; set; }
-    public Point(Vector3 position, Point? origin = null)
-    {
-      Position = position;
-      Origin = origin;
-    }
+    public Vector3 Position { get; set; } = position;
+    public Point? Origin { get; set; } = origin;
+    public static Point? pathEnd { get; set; }
+
     public float distanceOrigin()
     {
-      return Vector3.Distance(Position, Origin.Position);
+      return Vector3.Distance(Position, Origin!.Position);
     }
   }
-  int intermediateFactor = 20;
+
+  private readonly int intermediateFactor = 20;
   public List<Point> searchFollowMePath(Vector3 start, int acceptanceRay = 50, List<Point>? points = null)
   {
-    if (points == null)
-    {
-      points = new List<Point>();
-      points.Add(new Point(start, null));
-    }
+    points ??= [new Point(start, null)];
     var result = new List<Point>(points.Count * 63);
-    for (int iPoint = 0; iPoint < points.Count; iPoint++)
+    for (var iPoint = 0; iPoint < points.Count; iPoint++)
     {
       var origin = points[iPoint].Position;
-      float distanceOriginFollowMe = Vector3.Distance(origin, soundSystem.FollowMePoint);
+      var distanceOriginFollowMe = Vector3.Distance(origin, soundSystem.FollowMePoint);
       if (distanceOriginFollowMe < acceptanceRay) // find the end
       {
         Point.pathEnd = points[iPoint]; // use to extract path from result
         return result;
       }
-      for (float i = -float.Pi; i < float.Pi; i += float.Pi / 10)
+      for (var i = -float.Pi; i < float.Pi; i += float.Pi / 10)
       {
-        RaycastHit hit;
-        BGCollisionModule.Raycast((findGround(origin) + new System.Numerics.Vector3(0, 1.5f, 0)), Util.ConvertOrientationToVector(i), out hit, 10000);
-        float distanceToOrigin = Vector3.Distance(hit.Point, origin);
+        BGCollisionModule.Raycast((findGround(origin) + new System.Numerics.Vector3(0, 1.5f, 0)), Util.ConvertOrientationToVector(i), out var hit, 10000);
+        var distanceToOrigin = Vector3.Distance(hit.Point, origin);
         if (distanceToOrigin > 3)
         {
-          Point hitPoint = new Point(hit.Point, points[iPoint]);
+          var hitPoint = new Point(hit.Point, points[iPoint]);
           result.Add(hitPoint);
-          float distance = Vector3.Distance(hit.Point, soundSystem.FollowMePoint);
+          var distance = Vector3.Distance(hit.Point, soundSystem.FollowMePoint);
           if (distance < acceptanceRay) // find the end
           {
             Point.pathEnd = hitPoint; // use to extract path from result
@@ -138,11 +129,11 @@ public partial class Plugin
         }
       }
     }
-    ScreenReader.Output($"yo {result.Count()}");
+    ScreenReader.Output($"yo {result.Count}");
     result.Sort(delegate (Point x, Point y) // sort from the smallest to the biggest distance
     {
-      float distanceX = Vector3.Distance(x.Position, soundSystem.FollowMePoint);
-      float distanceY = Vector3.Distance(y.Position, soundSystem.FollowMePoint);
+      var distanceX = Vector3.Distance(x.Position, soundSystem.FollowMePoint);
+      var distanceY = Vector3.Distance(y.Position, soundSystem.FollowMePoint);
       if (distanceX == distanceY) return 0;
       else if (distanceX > distanceY) return -1;
       else if (distanceX < distanceY) return 1;
@@ -151,11 +142,11 @@ public partial class Plugin
     return searchFollowMePath(start, acceptanceRay, result);
     //return searchFollowMePath(result.SkipLast(result.Count()/2).ToList());
   }
-  private static List<Vector3> extractPath(List<Point> searchResult)
+  private static List<Vector3> extractPath()
   {
     var path = new List<Vector3>();
     var currentPoint = Point.pathEnd;
-    while (currentPoint.Origin != null)
+    while (currentPoint!.Origin != null)
     {
       path.Add(currentPoint.Position);
       currentPoint = currentPoint.Origin;
