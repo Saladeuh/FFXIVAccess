@@ -142,7 +142,7 @@ public partial class Plugin
     return searchFollowMePath(start, acceptanceRay, result);
     //return searchFollowMePath(result.SkipLast(result.Count()/2).ToList());
   }
-  private static List<Vector3> extractPath()
+  private static List<Vector3> extractPath(List<Point> result)
   {
     var path = new List<Vector3>();
     var currentPoint = Point.pathEnd;

@@ -1,19 +1,9 @@
-using Dalamud.Game.ClientState.Objects;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Plugin.Services;
-using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FmodAudio;
-using FmodAudio.Base;
-using FmodAudio.DigitalSignalProcessing;
-using FmodAudio.DigitalSignalProcessing.Effects;
-using Lumina.Excel.GeneratedSheets;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FFXIVAccess;
 public class SoundSystem
@@ -29,7 +19,6 @@ public class SoundSystem
   public Sound? EnnemySound, FollowMeSound, EventObjSound, TrackSound;
   public Vector3 Up = new(0, 1, 0), Forward = new(0, 0, -1);
   public Dictionary<uint, Channel> ObjChannels = [];
-  public Dictionary<Vector3, Channel> WallsChannels = [];
   public Dictionary<uint, HashSet<Vector3>> Tracks = [];
   public SoundSystem()
   {
@@ -59,7 +48,6 @@ public class SoundSystem
     channelShortFollowMe = System.PlaySound(EventObjSound.Value, paused: true);
     channelShortFollowMe!.Set3DMinMaxDistance(0f, 60f);
   }
-  public bool WallMode = false;
   public void scanMapObject(IObjectTable gameObjects, Character localPlayer, uint mapId)
   {
     foreach (var t in gameObjects)
@@ -73,7 +61,7 @@ public class SoundSystem
       }
     }
   }
-  private void associateSoundToObjects(ref Character localPlayer, GameObject t)
+  private void associateSoundToObjects(ref Character localPlayer, Dalamud.Game.ClientState.Objects.Types.GameObject t)
   {
     if (t.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc && t.ObjectId != localPlayer.ObjectId)
     {
@@ -123,47 +111,6 @@ public class SoundSystem
       }
     }
     */
-  }
-  public void updateWallSounds(uint mapId, Vector3 playerPosition, HashSet<Vector3> walls)
-  {
-    if (WallMode)
-    {
-      //ScreenReader.Output(walls.Count().ToString());
-      foreach (var wallPoint in walls)
-      {
-        var distance = Vector3.Distance(wallPoint, playerPosition);
-        if (distance <= 5)
-        {
-          if (!WallsChannels.ContainsKey(wallPoint))
-          {
-            Channel wallTrack;
-            wallTrack = System.PlaySound(TrackSound.Value, paused: false);
-            wallTrack!.Volume = 0.2f;
-            wallTrack.Set3DAttributes(wallPoint, default, default);
-            WallsChannels[wallPoint] = wallTrack;
-          }
-        }
-        else
-        {
-          if (WallsChannels.TryGetValue(wallPoint, out var value))
-          {
-            value.Stop();
-            WallsChannels.Remove(wallPoint);
-          }
-        }
-      }
-    }
-    else
-    {
-      foreach (var channel in WallsChannels.Values)
-      {
-        if (channel != null && channel.IsPlaying)
-        {
-          channel.Stop();
-        }
-      }
-      WallsChannels.Clear();
-    }
   }
   public void updateFollowMe(Vector3 position, float min, float max)
   {

@@ -47,7 +47,6 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
   private ITitleScreenMenu titleScreenMenu { get; set; }
   public IClientState clientState { get; private set; }
   private IToastGui toastGui { get; set; }
-  public QuestManager? questManager = null!;
   public ITargetManager targetManager;
   public Configuration Configuration { get; init; }
   public WindowSystem WindowSystem = new("SamplePlugin");
@@ -90,10 +89,10 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
     this.framework = framework;
     this.gameObjects = gameObjects;
     this.gameGui = gameGui;
+    this.keyState = keyState;
     this.targetManager = targetManager;
     this.addonLifeCycle = addonLifeCycle;
     AddonEventManager = addonEventManager;
-    this.questManager = new QuestManager();
     this.toastGui = toastGui;
     Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
     Configuration.Initialize(PluginInterface);
@@ -111,7 +110,6 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
     //addonLifeCycle.RegisterListener(AddonEvent.PreFinalize, OnPostRefresh);
     addonLifeCycle.RegisterListener(AddonEvent.PostSetup, OnPostRefresh);
     //addonLifeCycle.RegisterListener(AddonEvent.PostSetup, addonDict.Keys, OnPostSetup);
-    this.keyState = keyState;
     toastGui.Toast += onToast;
     toastGui.ErrorToast += onErrorToast;
     toastGui.QuestToast += onQuestToast;
@@ -210,6 +208,8 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
     }
   }
 
+  public float lastRotation { get; private set; }
+
   private readonly nint focusedAddon = nint.Zero;
   private AtkResNode? _lastFocusedNode;
   private readonly SortedDictionary<string, nint> _lastAddons = [];
@@ -248,6 +248,12 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
       var flags = stackalloc int[] { 0x4000, 0, 0x4000, 0 };
       var orientation = Util.ConvertOrientationToVector(this.clientState.LocalPlayer.Rotation);
       CSFramework.Instance()->BGCollisionModule->RaycastEx(&hit, clientState.LocalPlayer.Position + new System.Numerics.Vector3(0, 2f, 0), orientation, 10000, 1, flags);
+      if (position != _lastPosition)
+      {
+        soundSystem.GPSUpdate(clientState.LocalPlayer.Position);
+        soundSystem.setFollowMePlayingState(ref _lastPosition);
+      }
+
       if ((position == _lastPosition || Vector3.Distance(position, hit.Point) <= 0.2) && tryingToMove())
       {
         if (_banging)
@@ -263,7 +269,7 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
       }
       else if (tryingToMove())
       {
-        rayArround();
+        //rayArround();
         //ScreenReader.Output($"{clientState.LocalPlayer.Rotation}");
         _banging = false;
       }
@@ -285,11 +291,6 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
     }
     if (!IsTextInputActive && !ImGuiNET.ImGui.GetIO().WantCaptureKeyboard)
     {
-      if (keyState[VirtualKey.G])
-      {
-        soundSystem.WallMode = !soundSystem.WallMode;
-        keyState[VirtualKey.G] = false;
-      }
       if (keyState[VirtualKey.CONTROL])
       {
         foreach (var kvp in keyActions)
@@ -305,16 +306,11 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
     if (this.clientState.LocalPlayer != null)
     {
       var rotation = this.clientState.LocalPlayer.Rotation;
-      soundSystem.System.Set3DListenerAttributes(0, clientState.LocalPlayer.Position, default, Util.ConvertOrientationToVector(rotation), soundSystem.Up);
-      soundSystem.scanMapObject(
-        this.gameObjects, clientState.LocalPlayer, this.currentMapId);
-      soundSystem.GPSUpdate(clientState.LocalPlayer.Position);
-      var currentMapWalls = new HashSet<System.Numerics.Vector3>();
-      if (Walls.TryGetValue(currentMapId, out currentMapWalls))
+      if (rotation != lastRotation)
       {
-        soundSystem.updateWallSounds(currentMapId, _lastPosition, currentMapWalls);
+        soundSystem.System.Set3DListenerAttributes(0, clientState.LocalPlayer.Position, default, Util.ConvertOrientationToVector(rotation), soundSystem.Up);
+        lastRotation = rotation;
       }
-      soundSystem.setFollowMePlayingState(ref _lastPosition);
     }
     soundSystem.System.Update();
   }
