@@ -48,7 +48,7 @@ public partial class Plugin
   public Dictionary<uint, HashSet<Vector3>> Walls = new Dictionary<uint, HashSet<Vector3>>();
   private unsafe void rayArround()
   {
-    uint currentMapId = currentTerritory;
+    uint currentMapId = this.currentMapId;
     RaycastHit hit;
     var flags = stackalloc int[] { 0x4000, 0, 0x4000, 0 };
     Walls.TryAdd(currentMapId, new HashSet<Vector3>());
@@ -57,7 +57,7 @@ public partial class Plugin
     var orientation = Util.ConvertOrientationToVector(this.clientState.LocalPlayer.Rotation);
     CSFramework.Instance()->BGCollisionModule->RaycastEx(&hit, clientState.LocalPlayer.Position + new Vector3(0, 2f, 0), orientation, 10000, 4, flags);
     ////BGCollisionModule.Raycast((clientState.LocalPlayer.Position + new Vector3(0, 2f, 0)), orientation, out hit, 1000);
-    currentMapId = this.currentTerritory;
+    currentMapId = this.currentMapId;
     Vector3 roundPoint = Util.RoundVector3(hit.Point, 0);
     Walls[currentMapId].Add(roundPoint);
     //}
