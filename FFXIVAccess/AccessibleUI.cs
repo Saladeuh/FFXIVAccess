@@ -103,7 +103,7 @@ namespace FFXIVAccess;
       if (addonStruct.HasValue)
       {
         var atk = addonStruct.Value.AtkUnitBase;
-        ScreenReader.Output(MemoryHelper.ReadSeStringNullTerminated((IntPtr)atk.Name).TextValue);
+        //ScreenReader.Output(MemoryHelper.ReadSeStringNullTerminated((IntPtr)atk.Name).TextValue);
         var values = addonStruct.Value.AtkUnitBase.AtkValues;
         for (int i = 0; i < addonStruct.Value.AtkUnitBase.AtkValuesCount; i++)
         {
@@ -146,14 +146,4 @@ namespace FFXIVAccess;
       var addonStruct = Dalamud.SafeMemory.PtrToStructure<AddonSelectString>(addonPtr);
       return SafeMemory.PtrToStructure<AtkResNode>((IntPtr)addonStruct.Value.AtkUnitBase.CursorTarget);
     }
-    private unsafe void onNodeFocusChanged(AtkResNode? node)
-    {
-      if (node != null)
-        ScreenReader.Output($"change {node.Value.Type.ToString()} {node.Value.NodeID.ToString()}");
-      if (node.HasValue && node.Value.Type == NodeType.Text)
-      {
-        var text = Dalamud.Memory.MemoryHelper.ReadSeStringNullTerminated((IntPtr)node.Value.GetAsAtkTextNode()->GetText());
-        ScreenReader.Output(text.TextValue);
       }
-    }
-  }
