@@ -7,7 +7,7 @@ using Dalamud.Game;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.ClientState.Keys;
 using Dalamud.Game.ClientState.Objects;
-using Dalamud.Game.Command;
+using Dalamud.Game;
 using Dalamud.Game.Gui;
 using Dalamud.Game.Gui.FlyText;
 using Dalamud.Game.Gui.Toast;
@@ -24,13 +24,12 @@ using FFXIVClientStructs.FFXIV.Common.Component.BGCollision;
 using FFXIVClientStructs.FFXIV.Common.Math;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using Lumina.Excel.GeneratedSheets;
-using Mappy;
-using Mappy.System;
 using Dalamud.Plugin.Services;
-using Dalamud.Game.Addon.Lifecycle;
-using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
-using Dalamud.Game.Addon.Events;
-using static FFXIVClientStructs.FFXIV.Client.UI.AddonRelicNoteBook;
+using FFXIVClientStructs.FFXIV.Client.Game;
+using Mappy;
+using Dalamud.Game.Command;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
+using Lumina.Excel.GeneratedSheets2;r
 
 namespace FFXIVAccess;
 public unsafe sealed partial class Plugin : IDalamudPlugin
@@ -38,7 +37,7 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
   public string Name => "FFXIVAccess";
   public string Version => "0.0.0";
   public static Lumina.Excel.ExcelSheet<CustomQuestSheet> questList;
-  private Lumina.Excel.ExcelSheet<Item> itemList;
+  private Lumina.Excel.ExcelSheet<Lumina.Excel.GeneratedSheets.Item> itemList;
   private DalamudPluginInterface PluginInterface { get; init; }
   private ICommandManager CommandManager { get; init; }
   private IDataManager dataManager { get; init; }
@@ -55,7 +54,7 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
   private ITitleScreenMenu titleScreenMenu { get; set; }
   public IClientState clientState { get; private set; }
   private IToastGui toastGui { get; set; }
-  public QuestManager questManager = null!;
+  public QuestManager? questManager = null!;
   public ITargetManager targetManager = null;
   public Configuration Configuration { get; init; }
   public WindowSystem WindowSystem = new("SamplePlugin");
@@ -90,11 +89,7 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
     ScreenReader.Output("Screen Reader ready");
     // Mappy services
     PluginInterface = pluginInterface;
-    pluginInterface.Create<Service>();
-    Service.Cache = new CompositeLuminaCache();
-    Service.ModuleManager = new ModuleManager();
-    Service.QuestManager = new QuestManager();
-    Service.MapManager = new MapManager();
+    var mappyPlugin = new MappyPlugin(PluginInterface);
     CommandManager = commandManager;
     this.titleScreenMenu = titleScreenMenu;
     this.clientState = clientState;
@@ -110,9 +105,9 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
     Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
     Configuration.Initialize(PluginInterface);
     //chat.ChatMessage += onChat;
-    itemList = dataManager.GetExcelSheet<Item>();
+    itemList = dataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>();
     questList = dataManager.GetExcelSheet<CustomQuestSheet>();
-    var contextMenu = new DalamudContextMenu(pluginInterface);
+    var contextMenu = new DalamudContextMenu(this.PluginInterface);
     contextMenu.OnOpenGameObjectContextMenu += OpenGameObjectContextMenu;
     contextMenu.OnOpenInventoryContextMenu += OpenInventory;
     framework.Update += OnFrameworkUpdate;
@@ -154,7 +149,7 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
     {
       HelpMessage = "A useful message to display in /xlhelp"
     });
-    CommandManager.AddHandler("/currentmapquest", new CommandInfo(OnCurrentMapQuestLevelCommand)
+  CommandManager.AddHandler("/currentmapquest", new CommandInfo(OnCurrentMapQuestLevelCommand)
     {
       HelpMessage = "A useful message to display in /xlhelp"
     });
@@ -213,6 +208,12 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
   }
   private RaptureAtkModule* RaptureAtkModule => CSFramework.Instance()->GetUiModule()->GetRaptureAtkModule();
   private bool IsTextInputActive => RaptureAtkModule->AtkModule.IsTextInputActive();
+
+  public uint currentMapId { get
+    {
+      return AgentMap.Instance()->CurrentMapId;
+    } }
+
   private nint FocusedAddon = nint.Zero;
   private AtkResNode? _lastFocusedNode;
   SortedDictionary<string, nint> _lastAddons = new SortedDictionary<string, nint>();
@@ -310,12 +311,12 @@ public unsafe sealed partial class Plugin : IDalamudPlugin
       var rotation = this.clientState.LocalPlayer.Rotation;
       soundSystem.System.Set3DListenerAttributes(0, clientState.LocalPlayer.Position, default, Util.ConvertOrientationToVector(rotation), soundSystem.Up);
       soundSystem.scanMapObject(
-        this.gameObjects, clientState.LocalPlayer, Service.MapManager.LoadedMapId);
+        this.gameObjects, clientState.LocalPlayer, this.currentMapId);
       soundSystem.GPSUpdate(clientState.LocalPlayer.Position);
       var currentMapWalls = new HashSet<System.Numerics.Vector3>();
-      if (Walls.TryGetValue(Service.MapManager.PlayerLocationMapID, out currentMapWalls))
+      if (Walls.TryGetValue(currentMapId, out currentMapWalls))
       {
-        soundSystem.updateWallSounds(Service.MapManager.PlayerLocationMapID, _lastPosition, currentMapWalls);
+        soundSystem.updateWallSounds(currentMapId, _lastPosition, currentMapWalls);
       }
       soundSystem.setFollowMePlayingState(ref _lastPosition);
     }

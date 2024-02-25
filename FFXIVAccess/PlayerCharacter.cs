@@ -15,7 +15,6 @@ using FFXIVClientStructs.FFXIV.Common.Component.BGCollision;
 using FmodAudio.DigitalSignalProcessing;
 using FmodAudio.DigitalSignalProcessing.Effects;
 using Lumina.Excel.GeneratedSheets;
-using Mappy;
 using CSFramework = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework;
 
 namespace FFXIVAccess;
@@ -49,7 +48,7 @@ public partial class Plugin
   public Dictionary<uint, HashSet<Vector3>> Walls = new Dictionary<uint, HashSet<Vector3>>();
   private unsafe void rayArround()
   {
-    uint currentMapId = Service.MapManager.LoadedMapId;
+    uint currentMapId = this.currentMapId;
     RaycastHit hit;
     var flags = stackalloc int[] { 0x4000, 0, 0x4000, 0 };
     Walls.TryAdd(currentMapId, new HashSet<Vector3>());
@@ -58,7 +57,7 @@ public partial class Plugin
     var orientation = Util.ConvertOrientationToVector(this.clientState.LocalPlayer.Rotation);
     CSFramework.Instance()->BGCollisionModule->RaycastEx(&hit, clientState.LocalPlayer.Position + new Vector3(0, 2f, 0), orientation, 10000, 4, flags);
     ////BGCollisionModule.Raycast((clientState.LocalPlayer.Position + new Vector3(0, 2f, 0)), orientation, out hit, 1000);
-    currentMapId = Service.MapManager.LoadedMapId;
+    currentMapId = this.currentMapId;
     Vector3 roundPoint = Util.RoundVector3(hit.Point, 0);
     Walls[currentMapId].Add(roundPoint);
     //}
@@ -152,7 +151,7 @@ public partial class Plugin
     return searchFollowMePath(start, acceptanceRay, result);
     //return searchFollowMePath(result.SkipLast(result.Count()/2).ToList());
   }
-  private List<Vector3> extractPath(List<Point> searchResult)
+  private static List<Vector3> extractPath(List<Point> searchResult)
   {
     var path = new List<Vector3>();
     var currentPoint = Point.pathEnd;

@@ -5,6 +5,10 @@ VisualStudioVersion = 17.4.33213.308
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FFXIVAccess", "FFXIVAccess\FFXIVAccess.csproj", "{1DBEF729-7BC2-4CC1-A467-093403F4676B}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mappy", "Mappy\Mappy\Mappy.csproj", "{24588B38-604F-47FC-ABF4-0D9CE52A2771}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KamiLib", "Mappy\KamiLib\KamiLib.csproj", "{91235C1E-739D-4234-B469-FDAEE6E039E3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -15,6 +19,14 @@ Global
 		{1DBEF729-7BC2-4CC1-A467-093403F4676B}.Debug|x64.Build.0 = Debug|x64
 		{1DBEF729-7BC2-4CC1-A467-093403F4676B}.Release|x64.ActiveCfg = Release|x64
 		{1DBEF729-7BC2-4CC1-A467-093403F4676B}.Release|x64.Build.0 = Release|x64
+		{24588B38-604F-47FC-ABF4-0D9CE52A2771}.Debug|x64.ActiveCfg = Debug|x64
+		{24588B38-604F-47FC-ABF4-0D9CE52A2771}.Debug|x64.Build.0 = Debug|x64
+		{24588B38-604F-47FC-ABF4-0D9CE52A2771}.Release|x64.ActiveCfg = Release|x64
+		{24588B38-604F-47FC-ABF4-0D9CE52A2771}.Release|x64.Build.0 = Release|x64
+		{91235C1E-739D-4234-B469-FDAEE6E039E3}.Debug|x64.ActiveCfg = Debug|x64
+		{91235C1E-739D-4234-B469-FDAEE6E039E3}.Debug|x64.Build.0 = Debug|x64
+		{91235C1E-739D-4234-B469-FDAEE6E039E3}.Release|x64.ActiveCfg = Release|x64
+		{91235C1E-739D-4234-B469-FDAEE6E039E3}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
