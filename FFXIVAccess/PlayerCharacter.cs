@@ -25,10 +25,6 @@ namespace FFXIVAccess;
 public unsafe partial class Plugin
 {
   private readonly List<Vector3> rayOrientations = [new Vector3(1, 0, 0), new Vector3(-1, 0, 0), new Vector3(0, 0, 1), new Vector3(0, 0, -1)];
-  private bool tryingToMove()
-  {
-    return (keyState[VirtualKey.A] || keyState[VirtualKey.E] || keyState[VirtualKey.Z] || keyState[VirtualKey.S]);
-  }
   private unsafe void targetLevelObj(Level level, System.Numerics.Vector3 levelVector)
   {
     if (level.Object >= 1000000) // event NPC

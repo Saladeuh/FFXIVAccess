@@ -252,6 +252,13 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
     */
     if (clientState.LocalPlayer != null)
     {
+      soundSystem.scanMapObject(gameObjects, this.clientState.LocalPlayer, currentMapId);
+      var rotation = this.clientState.LocalPlayer.Rotation;
+      if (rotation != lastRotation)
+      {
+        soundSystem.System.Set3DListenerAttributes(0, clientState.LocalPlayer.Position, default, Util.ConvertOrientationToVector(rotation), soundSystem.Up);
+        lastRotation = rotation;
+      }
       var position = clientState.LocalPlayer.Position;
       RaycastHit hit;
       var flags = stackalloc int[] { 0x4000, 0, 0x4000, 0 };
@@ -270,7 +277,7 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
         }
         _banging = true;
       }
-      else if (tryingToMove())
+      else if (AgentMap.Instance()->IsPlayerMoving == 1)
       {
         //rayArround();
         //ScreenReader.Output($"{clientState.LocalPlayer.Rotation}");
@@ -306,17 +313,7 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
         }
       }
     }
-    if (this.clientState.LocalPlayer != null)
-    {
-      soundSystem.scanMapObject(gameObjects, this.clientState.LocalPlayer, currentMapId);
-      var rotation = this.clientState.LocalPlayer.Rotation;
-      if (rotation != lastRotation)
-      {
-        soundSystem.System.Set3DListenerAttributes(0, clientState.LocalPlayer.Position, default, Util.ConvertOrientationToVector(rotation), soundSystem.Up);
-        lastRotation = rotation;
-      }
-    }
-    soundSystem.System.Update();
+    soundSystem.Update(UIInputData.Instance()->IsGameWindowFocused);
   }
   /*
   private void onChat(XivChatType type, uint senderId, ref SeString sender, ref SeString message, ref bool isHandled)

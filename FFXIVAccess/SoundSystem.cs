@@ -202,4 +202,15 @@ public unsafe class SoundSystem
     ScreenReader.Output("bwaaa");
     return this._CreateBattleCharacterHook.Original(self, index, param);
   }
+  public void Update(bool isWindowFocused)
+  {
+    if (isWindowFocused)
+    {
+      System.MasterChannelGroup.Paused = false;
+      System.Update();
+    } else
+    {
+      System.MasterChannelGroup.Paused = true;
+    }
+  }
 }
