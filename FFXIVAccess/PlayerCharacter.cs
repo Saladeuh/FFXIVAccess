@@ -8,17 +8,20 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using Dalamud.Game.ClientState.Keys;
+using Dalamud.Hooking;
 using FFXIVClientStructs.FFXIV.Client.Game.Event;
+using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Common.Component.BGCollision;
 using FmodAudio.DigitalSignalProcessing;
 using FmodAudio.DigitalSignalProcessing.Effects;
 using Lumina.Excel.GeneratedSheets;
+using Mappy.Utility;
 using CSFramework = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework;
 
 namespace FFXIVAccess;
-public partial class Plugin
+public unsafe partial class Plugin
 {
   private readonly List<Vector3> rayOrientations = [new Vector3(1, 0, 0), new Vector3(-1, 0, 0), new Vector3(0, 0, 1), new Vector3(0, 0, -1)];
   private bool tryingToMove()
@@ -153,5 +156,26 @@ public partial class Plugin
     }
     path.Reverse();
     return path;
+  }
+
+  private delegate void SetPosition(GameObject* self, float x, float y, float z);
+  private readonly Hook<SetPosition>? _SetPositionHook;
+
+  private void DetourSetPosition(GameObject* self, float x, float y, float z)
+  {
+    try
+    {
+      if (self->GetObjectID() == ((uint)clientState.LocalPlayer.ObjectId))
+      {
+        soundSystem.GPSUpdate(clientState.LocalPlayer.Position);
+        soundSystem.setFollowMePlayingState(ref _lastPosition);
+      }
+      else
+      {
+
+      }
+    }
+    catch { }
+    this._SetPositionHook.Original(self, x, y, z);
   }
 }

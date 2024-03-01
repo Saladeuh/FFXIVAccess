@@ -23,6 +23,7 @@ using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using Dalamud.Game.Addon.Events;
+using FFXIVClientStructs.FFXIV.Client.Game.Object;
 
 namespace FFXIVAccess;
 public sealed unsafe partial class Plugin : IDalamudPlugin
@@ -40,6 +41,7 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
   private IFlyTextGui flyTextGui { get; init; }
   public IKeyState keyState { get; private set; }
   private IObjectTable gameObjects { get; init; }
+  private IGameInteropProvider gameInteropProvider { get; }
   public IGameGui gameGui { get; private set; }
 
 
@@ -66,6 +68,7 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
     [RequiredVersion("1.0")] ICommandManager commandManager,
     IFramework framework,
     IFlyTextGui flyTextGui,
+    IGameInteropProvider gameInteropProvider,
     IGameGui gameGui,
     IKeyState keyState,
     IToastGui toastGui,
@@ -89,6 +92,7 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
     this.framework = framework;
     this.gameObjects = gameObjects;
     this.gameGui = gameGui;
+    this.gameInteropProvider = gameInteropProvider;
     this.keyState = keyState;
     this.targetManager = targetManager;
     this.addonLifeCycle = addonLifeCycle;
@@ -96,6 +100,11 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
     this.toastGui = toastGui;
     Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
     Configuration.Initialize(PluginInterface);
+    this._SetPositionHook = gameInteropProvider.HookFromAddress<SetPosition>(
+      (nint)GameObject.Addresses.SetPosition.Value,
+      DetourSetPosition);
+    this._SetPositionHook.Enable();
+    
     //chat.ChatMessage += onChat;
     itemList = dataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!;
     QuestList = dataManager.GetExcelSheet<CustomQuestSheet>()!;
@@ -114,7 +123,7 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
     toastGui.ErrorToast += onErrorToast;
     toastGui.QuestToast += onQuestToast;
     OnNewAddonOpenedEvent += onSelectString;
-    soundSystem = new SoundSystem();
+    soundSystem = new SoundSystem(gameInteropProvider);
     ConfigWindow = new ConfigWindow(this);
     keyActions = new Dictionary<VirtualKey, Action<string, string>>()
     {
@@ -248,13 +257,7 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
       var flags = stackalloc int[] { 0x4000, 0, 0x4000, 0 };
       var orientation = Util.ConvertOrientationToVector(this.clientState.LocalPlayer.Rotation);
       CSFramework.Instance()->BGCollisionModule->RaycastEx(&hit, clientState.LocalPlayer.Position + new System.Numerics.Vector3(0, 2f, 0), orientation, 10000, 1, flags);
-      if (position != _lastPosition)
-      {
-        soundSystem.GPSUpdate(clientState.LocalPlayer.Position);
-        soundSystem.setFollowMePlayingState(ref _lastPosition);
-      }
-
-      if ((position == _lastPosition || Vector3.Distance(position, hit.Point) <= 0.2) && tryingToMove())
+      if ((position == _lastPosition || Vector3.Distance(position, hit.Point) <= 0.2))
       {
         if (_banging)
         {
@@ -305,6 +308,7 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
     }
     if (this.clientState.LocalPlayer != null)
     {
+      soundSystem.scanMapObject(gameObjects, this.clientState.LocalPlayer, currentMapId);
       var rotation = this.clientState.LocalPlayer.Rotation;
       if (rotation != lastRotation)
       {

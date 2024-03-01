@@ -1,12 +1,17 @@
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.Types;
+using Dalamud.Hooking;
 using Dalamud.Plugin.Services;
+using Dalamud.Utility.Signatures;
+using FFXIVClientStructs.FFXIV.Client.Game.Object;
+using FFXIVClientStructs.Interop.Attributes;
 using FmodAudio;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace FFXIVAccess;
-public class SoundSystem
+public unsafe class SoundSystem
 {
   public FmodSystem System { get; }
   public Channel? channelFollowMe, channelShortFollowMe;
@@ -20,7 +25,7 @@ public class SoundSystem
   public Vector3 Up = new(0, 1, 0), Forward = new(0, 0, -1);
   public Dictionary<uint, Channel> ObjChannels = [];
   public Dictionary<uint, HashSet<Vector3>> Tracks = [];
-  public SoundSystem()
+  public SoundSystem(IGameInteropProvider gameInteropProvider)
   {
     //Creates the FmodSystem object
     System = FmodAudio.Fmod.CreateSystem();
@@ -47,20 +52,30 @@ public class SoundSystem
     sound.Set3DMinMaxDistance(0f, 20f);
     channelShortFollowMe = System.PlaySound(EventObjSound.Value, paused: true);
     channelShortFollowMe!.Set3DMinMaxDistance(0f, 60f);
+    this._CreateBattleCharacterHook = gameInteropProvider.HookFromAddress<CreateBattleCharacter>(
+      (nint)ClientObjectManager.Addresses.CreateBattleCharacter.Value,
+      DetourCreateBattleCharacter);
+    this._CreateBattleCharacterHook.Enable();
   }
   public void scanMapObject(IObjectTable gameObjects, Character localPlayer, uint mapId)
   {
     foreach (var t in gameObjects)
     {
       associateSoundToObjects(ref localPlayer, t);
-      // Add objects positions to save where it's possible to wallk
-      if ((!t.IsDead) && t.ObjectId != localPlayer.ObjectId && t.ObjectKind == ObjectKind.Player && Vector3.Distance(t.Position, localPlayer.Position) <= 200)
-      {
-        Tracks.TryAdd(mapId, []);
-        Tracks[mapId].Add(Util.RoundVector3(t.Position, 0));
-      }
+      SaveTracaks(localPlayer, mapId, t);
     }
   }
+
+  private void SaveTracaks(Character localPlayer, uint mapId, Dalamud.Game.ClientState.Objects.Types.GameObject t)
+  {
+    // Add objects positions to save where it's possible to wallk
+    if ((!t.IsDead) && t.ObjectId != localPlayer.ObjectId && t.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player && Vector3.Distance(t.Position, localPlayer.Position) <= 200)
+    {
+      Tracks.TryAdd(mapId, []);
+      Tracks[mapId].Add(Util.RoundVector3(t.Position, 0));
+    }
+  }
+
   private void associateSoundToObjects(ref Character localPlayer, Dalamud.Game.ClientState.Objects.Types.GameObject t)
   {
     if (t.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc && t.ObjectId != localPlayer.ObjectId)
@@ -69,14 +84,12 @@ public class SoundSystem
       if ((!t.IsDead) && (BattleNpcSubKind)t.SubKind == BattleNpcSubKind.Enemy && Vector3.Distance(t.Position, localPlayer.Position) <= 200)
       {
         if (!ObjChannels.TryGetValue(t.ObjectId, out var value))
-
         {
           Channel channelNPC;
           channelNPC = System.PlaySound(EnnemySound.Value, paused: false);
           value = channelNPC!;
           ObjChannels[t.ObjectId] = value;
         }
-
         value.Set3DAttributes(t.Position, default, default);
       }
       else
@@ -181,5 +194,12 @@ public class SoundSystem
         ScreenReader.Output(GPSPlayingIndex.ToString());
       }
     }
+  }
+  private delegate uint CreateBattleCharacter(ClientObjectManager* self, uint index = 4294967295, byte param = 0);
+  private readonly Hook<CreateBattleCharacter>? _CreateBattleCharacterHook;
+  public uint DetourCreateBattleCharacter(ClientObjectManager* self, uint index = 4294967295, byte param = 0)
+  {
+    ScreenReader.Output("bwaaa");
+    return this._CreateBattleCharacterHook.Original(self, index, param);
   }
 }
