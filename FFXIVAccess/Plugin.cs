@@ -257,7 +257,7 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
       var flags = stackalloc int[] { 0x4000, 0, 0x4000, 0 };
       var orientation = Util.ConvertOrientationToVector(this.clientState.LocalPlayer.Rotation);
       CSFramework.Instance()->BGCollisionModule->RaycastEx(&hit, clientState.LocalPlayer.Position + new System.Numerics.Vector3(0, 2f, 0), orientation, 10000, 1, flags);
-      if ((position == _lastPosition || Vector3.Distance(position, hit.Point) <= 0.2))
+      if ((position == _lastPosition || Vector3.Distance(position, hit.Point) <= 0.2) && AgentMap.Instance()->IsPlayerMoving==1)
       {
         if (_banging)
         {

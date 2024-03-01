@@ -13,6 +13,7 @@ using FFXIVClientStructs.FFXIV.Client.Game.Event;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.UI;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Common.Component.BGCollision;
 using FmodAudio.DigitalSignalProcessing;
 using FmodAudio.DigitalSignalProcessing.Effects;
@@ -167,12 +168,9 @@ public unsafe partial class Plugin
     {
       if (self->GetObjectID() == ((uint)clientState.LocalPlayer.ObjectId))
       {
+        //ScreenReader.Output(AgentMap.Instance()->IsPlayerMoving.ToString());
         soundSystem.GPSUpdate(clientState.LocalPlayer.Position);
         soundSystem.setFollowMePlayingState(ref _lastPosition);
-      }
-      else
-      {
-
       }
     }
     catch { }
