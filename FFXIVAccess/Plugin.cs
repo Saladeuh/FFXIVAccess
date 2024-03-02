@@ -24,6 +24,7 @@ using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using Dalamud.Game.Addon.Events;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
+using SightyFriend;
 
 namespace FFXIVAccess;
 public sealed unsafe partial class Plugin : IDalamudPlugin
@@ -85,6 +86,7 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
     // Mappy services
     PluginInterface = pluginInterface;
     var mappyPlugin = new MappyPlugin(PluginInterface);
+    var sf=new SightyFriendPlugin(PluginInterface, commandManager);
     CommandManager = commandManager;
     this.titleScreenMenu = titleScreenMenu;
     this.clientState = clientState;

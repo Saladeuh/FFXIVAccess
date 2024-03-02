@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mappy", "Mappy\Mappy\Mappy.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KamiLib", "Mappy\KamiLib\KamiLib.csproj", "{91235C1E-739D-4234-B469-FDAEE6E039E3}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SightyFriend", "SightyFriend\SightyFriend\SightyFriend.csproj", "{A88097BC-912B-4DA3-BAD6-DD026AA39565}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -27,6 +29,10 @@ Global
 		{91235C1E-739D-4234-B469-FDAEE6E039E3}.Debug|x64.Build.0 = Debug|x64
 		{91235C1E-739D-4234-B469-FDAEE6E039E3}.Release|x64.ActiveCfg = Release|x64
 		{91235C1E-739D-4234-B469-FDAEE6E039E3}.Release|x64.Build.0 = Release|x64
+		{A88097BC-912B-4DA3-BAD6-DD026AA39565}.Debug|x64.ActiveCfg = Debug|x64
+		{A88097BC-912B-4DA3-BAD6-DD026AA39565}.Debug|x64.Build.0 = Debug|x64
+		{A88097BC-912B-4DA3-BAD6-DD026AA39565}.Release|x64.ActiveCfg = Release|x64
+		{A88097BC-912B-4DA3-BAD6-DD026AA39565}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
