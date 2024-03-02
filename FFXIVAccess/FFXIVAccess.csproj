@@ -85,6 +85,7 @@
     <PackageReference Include="SharpDX.Mathematics" Version="4.2.0" />
     <ProjectReference Include="..\Mappy\KamiLib\KamiLib.csproj" />
     <ProjectReference Include="..\Mappy\Mappy\Mappy.csproj" />
+    <ProjectReference Include="..\SightyFriend\SightyFriend\SightyFriend.csproj" />
     <Reference Include="FFXIVClientStructs">
       <HintPath>$(DalamudLibPath)FFXIVClientStructs.dll</HintPath>
       <Private>false</Private>

@@ -939,6 +939,12 @@
           "DalamudPackager": "[2.1.12, )",
           "KamiLib": "[1.0.0, )"
         }
+      },
+      "sightyfriend": {
+        "type": "Project",
+        "dependencies": {
+          "DalamudPackager": "[2.1.12, )"
+        }
       }
     }
   }
