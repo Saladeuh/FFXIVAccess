@@ -3,7 +3,8 @@ using System;
 using System.IO;
 
 namespace FFXIVAccess;
-class ScreenReader
+
+internal class ScreenReader
 {
   internal static bool Output(string text, bool interrupt = false)
   {

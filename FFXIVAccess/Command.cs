@@ -28,7 +28,7 @@ public partial class Plugin
     //Service.MapManager.PlayerLocationMapID;
     var questArray = FFXIVClientStructs.FFXIV.Client.Game.QuestManager.Instance()->NormalQuestsSpan;
     var acceptedQuests = QuestHelpers.GetAcceptedQuests();
-    for (int i = 0; i <= 100; i++)
+    for (var i = 0; i <= 100; i++)
     {
       var qStruct = questArray[i];
       int id = qStruct.QuestId;
@@ -37,22 +37,22 @@ public partial class Plugin
         if (extQuest.QuestId == id)
         {
           id += 65536;
-          var name = questList.GetRow((uint)id).Name;
-          var levels = QuestHelpers.GetActiveLevelsForQuest(name, currentMapId);
+          var name = QuestList.GetRow((uint)id)!.Name;
+          var levels = QuestHelpers.GetActiveLevelsForQuest(name, currentMapId)?? [];
           var text = $"{name}: {levels.Count()}";
           var text2 = "";
           if (name.ToString().Contains(args))
           {
             foreach (var level in levels)
             {
-              var levelPlace = level.Map.Value.RowId;
+              var levelPlace = level.Map.Value!.RowId;
               if (currentMapId == levelPlace)
               {
                 var levelVector = new System.Numerics.Vector3(level.X, level.Y, level.Z);
                 soundSystem.updateFollowMe(levelVector, level.Radius, 1000f);
                 targetLevelObj(level, levelVector);
 
-                var characPosition = (FFXIVClientStructs.FFXIV.Common.Math.Vector3)clientState.LocalPlayer.Position;
+                var characPosition = (FFXIVClientStructs.FFXIV.Common.Math.Vector3)clientState.LocalPlayer!.Position;
                 var path = (Vector3)levelVector - characPosition;
                 text2 += $"{level.RowId}, {level.Object}, {level.Radius} {Vector3.Distance(characPosition, levelVector)} ";
                 //$": {Vector3.Distance(characPosition, levelVector)}";
@@ -62,7 +62,7 @@ public partial class Plugin
                   if (path.Z > 0) // south-east
                     directionAngle = float.Pi / 4;
                   else if (path.Z < 0) // north-east
-                    directionAngle = float.Pi / 2 + float.Pi / 4;
+                    directionAngle = (float.Pi / 2) + (float.Pi / 4);
                   else // east
                     directionAngle = float.Pi / 2;
                 }
@@ -71,7 +71,7 @@ public partial class Plugin
                   if (path.Z > 0) // south-west
                     directionAngle = -(float.Pi / 4);
                   else if (path.Z < 0) // north-west 
-                    directionAngle = -(float.Pi / 2 + float.Pi / 4);
+                    directionAngle = -((float.Pi / 2) + (float.Pi / 4));
                   else // west
                     directionAngle = -(float.Pi / 2);
                 }
@@ -89,7 +89,7 @@ public partial class Plugin
 
             }
           }
-        }
+        } 
       }
     }
   }
@@ -101,7 +101,7 @@ public partial class Plugin
     var questArray = FFXIVClientStructs.FFXIV.Client.Game.QuestManager.Instance()->NormalQuestsSpan;
     var accepted = FFXIVClientStructs.FFXIV.Client.Game.QuestManager.Instance()->NumAcceptedQuests.ToString();
     var acceptedQuests = QuestHelpers.GetAcceptedQuests();
-    for (int i = 0; i <= 100; i++)
+    for (var i = 0; i <= 100; i++)
     {
       var q = questArray[i];
       int id = q.QuestId;
@@ -110,9 +110,10 @@ public partial class Plugin
         if (extQuest.QuestId == id)
         {
           id += 65536;
-          var name = questList.GetRow((uint)id).Name;
-          var place = questList.GetRow((uint)id).PlaceName.Value.Name;
-          ScreenReader.Output($"{name}: {place} {QuestHelpers.GetActiveLevelsForQuest(name, this.currentMapId).Count()} {this.currentMapId}");
+          var name = QuestList.GetRow((uint)id)!.Name;
+          var place = QuestList.GetRow((uint)id)!.PlaceName.Value!.Name;
+          var levels = QuestHelpers.GetActiveLevelsForQuest(name, this.currentMapId) ?? [];
+          ScreenReader.Output($"{name}: {place} {levels.Count()} {this.currentMapId}");
 
         }
       }
@@ -134,17 +135,18 @@ public partial class Plugin
       }
     }
   }
-  Thread thread = null;
+
+  private Thread thread = null;
   private unsafe void OnCommand(string command, string args)
   {
     thread = new Thread(() =>
     {
-      var result = searchFollowMePath(clientState.LocalPlayer.Position, 50);
+      var result = searchFollowMePath(clientState.LocalPlayer!.Position, 50);
       var path = extractPath(result);
       //result = searchFollowMePath(path.Last(), 200);
       //path=path.Concat(extractPath(result)).ToList();
       soundSystem.GPSStart(path, clientState.LocalPlayer.Position);
-      ScreenReader.Output($"{Vector3.Distance(path.Last(), soundSystem.FollowMePoint)}, {Vector3.Distance(path.Last(), _lastPosition)}, {path.Count()}");
+      ScreenReader.Output($"{Vector3.Distance(path.Last(), soundSystem.FollowMePoint)}, {Vector3.Distance(path.Last(), _lastPosition)}, {path.Count}");
     });
     thread.Start();
     /*

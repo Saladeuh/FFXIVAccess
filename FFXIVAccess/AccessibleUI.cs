@@ -18,9 +18,9 @@ using FFXIVClientStructs.FFXIV.Component.GUI;
 using Lumina.Excel.GeneratedSheets;
 
 namespace FFXIVAccess;
-  public partial class Plugin
-  {
-    public static readonly Dictionary<string, Type> addonDict = new Dictionary<string, Type>
+public partial class Plugin
+{
+  public static readonly Dictionary<string, Type> addonDict = new()
     {
     { "SelectString", typeof(AddonSelectString) },
     { "Character", typeof(AddonCharacterInspect) },
@@ -50,100 +50,100 @@ namespace FFXIVAccess;
       { "ConfigCaraOpeChara", typeof(AddonSelectString) },
     };
 
-    private void onQuestToast(ref SeString message, ref QuestToastOptions options, ref bool isHandled)
-    {
-      ScreenReader.Output(message.TextValue);
-    }
+  private void onQuestToast(ref SeString message, ref QuestToastOptions options, ref bool isHandled)
+  {
+    ScreenReader.Output(message.TextValue);
+  }
 
-    private void onErrorToast(ref SeString message, ref bool isHandled)
-    {
-      ScreenReader.Output(message.TextValue);
-    }
+  private void onErrorToast(ref SeString message, ref bool isHandled)
+  {
+    ScreenReader.Output(message.TextValue);
+  }
 
-    private void onToast(ref SeString message, ref ToastOptions options, ref bool isHandled)
-    {
-      ScreenReader.Output(message.TextValue);
-    }
+  private void onToast(ref SeString message, ref ToastOptions options, ref bool isHandled)
+  {
+    ScreenReader.Output(message.TextValue);
+  }
 
-    private void OpenInventory(InventoryContextMenuOpenArgs args)
-    {
-      ScreenReader.Output($"inv {args.ItemAmount.ToString()}");
-    }
+  private void OpenInventory(InventoryContextMenuOpenArgs args)
+  {
+    ScreenReader.Output($"inv {args.ItemAmount}");
+  }
 
-    private void OpenGameObjectContextMenu(GameObjectContextMenuOpenArgs args)
-    {
-      ScreenReader.Output($"t {args.ParentAddonName}: {args.Text}");
-    }
+  private void OpenGameObjectContextMenu(GameObjectContextMenuOpenArgs args)
+  {
+    ScreenReader.Output($"t {args.ParentAddonName}: {args.Text}");
+  }
 
-    private void onHoveredItemChange(object? sender, ulong e)
+  private void onHoveredItemChange(object? sender, ulong e)
+  {
+    var name = itemList.GetRow((uint)e)!.Name;
+    var desc = itemList.GetRow((uint)e)!.Description;
+    ScreenReader.Output($"{name}: {desc}");
+  }
+  private void onHoveredActionChanged(object? sender, HoveredAction e)
+  {
+    ScreenReader.Output(e.ActionKind.ToString());
+  }
+  private void onFlyTextCreated(ref FlyTextKind kind, ref int val1, ref int val2, ref SeString text1, ref SeString text2, ref uint color, ref uint icon, ref uint damageTypeIcon, ref float yOffset, ref bool handled)
+  {
+    ScreenReader.Output($"{text1},{text2}");
+  }
+  private unsafe void onSelectString(nint obj, string name)
+  {
+    try
     {
-      var name = itemList.GetRow((uint)e).Name;
-      var desc = itemList.GetRow((uint)e).Description;
-      ScreenReader.Output($"{name}: {desc}");
+      var addonStructTes = Dalamud.SafeMemory.PtrToStructure<AddonSelectString>(obj);
     }
-    private void onHoveredActionChanged(object? sender, HoveredAction e)
+    catch (NullReferenceException)
     {
-      ScreenReader.Output(e.ActionKind.ToString());
+      return;
     }
-    private void onFlyTextCreated(ref FlyTextKind kind, ref int val1, ref int val2, ref SeString text1, ref SeString text2, ref uint color, ref uint icon, ref uint damageTypeIcon, ref float yOffset, ref bool handled)
+    var addonStruct = Dalamud.SafeMemory.PtrToStructure<AddonSelectString>(obj);
+    if (addonStruct.HasValue)
     {
-      ScreenReader.Output($"{text1},{text2}");
-    }
-    private unsafe void onSelectString(nint obj, string name)
-    {
-      try
+      var atk = addonStruct.Value.AtkUnitBase;
+      //ScreenReader.Output(MemoryHelper.ReadSeStringNullTerminated((IntPtr)atk.Name).TextValue);
+      var values = addonStruct.Value.AtkUnitBase.AtkValues;
+      for (var i = 0; i < addonStruct.Value.AtkUnitBase.AtkValuesCount; i++)
       {
-        var addonStructTes = Dalamud.SafeMemory.PtrToStructure<AddonSelectString>(obj);
-      }
-      catch (NullReferenceException e)
-      {
-        return;
-      }
-      var addonStruct = Dalamud.SafeMemory.PtrToStructure<AddonSelectString>(obj);
-      if (addonStruct.HasValue)
-      {
-        var atk = addonStruct.Value.AtkUnitBase;
-        //ScreenReader.Output(MemoryHelper.ReadSeStringNullTerminated((IntPtr)atk.Name).TextValue);
-        var values = addonStruct.Value.AtkUnitBase.AtkValues;
-        for (int i = 0; i < addonStruct.Value.AtkUnitBase.AtkValuesCount; i++)
+        try
         {
-          try
+          if (values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String8 || values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.AllocatedString || values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String)
           {
-            if (values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String8 || values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.AllocatedString || values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String)
-            {
-              var text = Dalamud.Memory.MemoryHelper.ReadSeStringNullTerminated((IntPtr)values[i].String).TextValue;
-              ScreenReader.Output(text);
-            }
+            var text = Dalamud.Memory.MemoryHelper.ReadSeStringNullTerminated((IntPtr)values[i].String).TextValue;
+            ScreenReader.Output(text);
           }
-          catch (NullReferenceException e)
-          {
-            continue;
-          }
+        }
+        catch (NullReferenceException)
+        {
+          continue;
         }
       }
     }
-    private bool isAnyKeyBind()
+  }
+  private bool isAnyKeyBind()
+  {
+    foreach (var key in keyState.GetValidVirtualKeys())
     {
-      foreach (var key in keyState.GetValidVirtualKeys())
+      if (keyState[key])
       {
-        if (keyState[key])
-        {
-          return true;
-        }
+        return true;
       }
-      return false;
     }
-    private unsafe AtkResNode? getTargetCursorNode(IntPtr addonPtr)
+    return false;
+  }
+  private static unsafe AtkResNode? getTargetCursorNode(IntPtr addonPtr)
+  {
+    try
     {
-      try
-      {
-        var addonStructTes = Dalamud.SafeMemory.PtrToStructure<AddonSelectString>(addonPtr);
-      }
-      catch (NullReferenceException e)
-      {
-        return null;
-      }
-      var addonStruct = Dalamud.SafeMemory.PtrToStructure<AddonSelectString>(addonPtr);
-      return SafeMemory.PtrToStructure<AtkResNode>((IntPtr)addonStruct.Value.AtkUnitBase.CursorTarget);
+      var addonStructTes = Dalamud.SafeMemory.PtrToStructure<AddonSelectString>(addonPtr);
     }
-      }
+    catch (NullReferenceException)
+    {
+      return null;
+    }
+    var addonStruct = Dalamud.SafeMemory.PtrToStructure<AddonSelectString>(addonPtr);
+    return SafeMemory.PtrToStructure<AtkResNode>((IntPtr)addonStruct.Value.AtkUnitBase.CursorTarget);
+  }
+}
