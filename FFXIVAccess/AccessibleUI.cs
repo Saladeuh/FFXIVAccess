@@ -1,10 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Metadata.Ecma335;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using Dalamud;
 using Dalamud.ContextMenu;
 using Dalamud.Game.Gui;
@@ -12,15 +7,14 @@ using Dalamud.Game.Gui.FlyText;
 using Dalamud.Game.Gui.Toast;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Memory;
-using FFXIVClientStructs.Attributes;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
-using Lumina.Excel.GeneratedSheets;
+using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 
 namespace FFXIVAccess;
 public partial class Plugin
 {
-  public static readonly Dictionary<string, Type> addonDict = new()
+  public static readonly Dictionary<string, Type> AddonDict = new()
     {
     { "SelectString", typeof(AddonSelectString) },
     { "Character", typeof(AddonCharacterInspect) },
@@ -93,13 +87,13 @@ public partial class Plugin
   {
     try
     {
-      var addonStructTes = Dalamud.SafeMemory.PtrToStructure<AddonSelectString>(obj);
+      var addonStructTes = SafeMemory.PtrToStructure<AddonSelectString>(obj);
     }
     catch (NullReferenceException)
     {
       return;
     }
-    var addonStruct = Dalamud.SafeMemory.PtrToStructure<AddonSelectString>(obj);
+    var addonStruct = SafeMemory.PtrToStructure<AddonSelectString>(obj);
     if (addonStruct.HasValue)
     {
       var atk = addonStruct.Value.AtkUnitBase;
@@ -109,24 +103,22 @@ public partial class Plugin
       {
         try
         {
-          if (values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String8 || values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.AllocatedString || values[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String)
+          if (values[i].Type == ValueType.String8 || values[i].Type == ValueType.AllocatedString || values[i].Type == ValueType.String)
           {
-            var text = Dalamud.Memory.MemoryHelper.ReadSeStringNullTerminated((IntPtr)values[i].String).TextValue;
+            var text = MemoryHelper.ReadSeStringNullTerminated((IntPtr)values[i].String).TextValue;
             ScreenReader.Output(text);
           }
         }
         catch (NullReferenceException)
-        {
-          continue;
-        }
+        { }
       }
     }
   }
   private bool isAnyKeyBind()
   {
-    foreach (var key in keyState.GetValidVirtualKeys())
+    foreach (var key in KeyState.GetValidVirtualKeys())
     {
-      if (keyState[key])
+      if (KeyState[key])
       {
         return true;
       }
@@ -137,13 +129,13 @@ public partial class Plugin
   {
     try
     {
-      var addonStructTes = Dalamud.SafeMemory.PtrToStructure<AddonSelectString>(addonPtr);
+      var addonStructTes = SafeMemory.PtrToStructure<AddonSelectString>(addonPtr);
     }
     catch (NullReferenceException)
     {
       return null;
     }
-    var addonStruct = Dalamud.SafeMemory.PtrToStructure<AddonSelectString>(addonPtr);
-    return SafeMemory.PtrToStructure<AtkResNode>((IntPtr)addonStruct.Value.AtkUnitBase.CursorTarget);
+    var addonStruct = SafeMemory.PtrToStructure<AddonSelectString>(addonPtr);
+    return SafeMemory.PtrToStructure<AtkResNode>((IntPtr)addonStruct!.Value.AtkUnitBase.CursorTarget);
   }
 }

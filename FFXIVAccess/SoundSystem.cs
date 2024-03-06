@@ -2,23 +2,21 @@ using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Hooking;
 using Dalamud.Plugin.Services;
-using Dalamud.Utility.Signatures;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
-using FFXIVClientStructs.Interop.Attributes;
 using FmodAudio;
 using System.Collections.Generic;
 using System.Numerics;
-using System.Runtime.CompilerServices;
 
 namespace FFXIVAccess;
 public unsafe class SoundSystem
 {
   public FmodSystem System { get; }
-  public Channel? channelFollowMe, channelShortFollowMe;
+  public Channel? ChannelFollowMe;
+  public readonly Channel? ChannelShortFollowMe;
   public Vector3 FollowMePoint { get; set; }
-  public bool GPSState { get; set; }
+  public bool GpsState { get; set; }
   public List<Vector3> GPSPath { get; set; }
-  public int GPSPlayingIndex { get; set; }
+  public int GpsPlayingIndex { get; set; }
 
   private Vector3 listenerPos = new() { Z = -1.0f };
   public Sound? EnnemySound, FollowMeSound, EventObjSound, TrackSound;
@@ -28,7 +26,7 @@ public unsafe class SoundSystem
   public SoundSystem(IGameInteropProvider gameInteropProvider)
   {
     //Creates the FmodSystem object
-    System = FmodAudio.Fmod.CreateSystem();
+    System = Fmod.CreateSystem();
     //System object Initialization
     System.Init(4093, InitFlags._3D_RightHanded);
 
@@ -39,7 +37,7 @@ public unsafe class SoundSystem
     float min = 2f, max = 40f; // 40 is apprximatively
     Sound sound;
     GPSPath = [];
-    GPSState = false;
+    GpsState = false;
     EnnemySound = sound = System.CreateSound("test.wav", Mode._3D | Mode.Loop_Normal | Mode._3D_LinearSquareRolloff);
     sound.Set3DMinMaxDistance(min, max);
 
@@ -50,8 +48,8 @@ public unsafe class SoundSystem
     sound.Set3DMinMaxDistance(min, 40f);
     TrackSound = sound = System.CreateSound("track.wav", Mode._3D | Mode.Loop_Normal | Mode._3D_LinearSquareRolloff);
     sound.Set3DMinMaxDistance(0f, 20f);
-    channelShortFollowMe = System.PlaySound(EventObjSound.Value, paused: true);
-    channelShortFollowMe!.Set3DMinMaxDistance(0f, 60f);
+    ChannelShortFollowMe = System.PlaySound(EventObjSound.Value, paused: true);
+    ChannelShortFollowMe!.Set3DMinMaxDistance(0f, 60f);
     this._CreateBattleCharacterHook = gameInteropProvider.HookFromAddress<CreateBattleCharacter>(
       (nint)ClientObjectManager.Addresses.CreateBattleCharacter.Value,
       DetourCreateBattleCharacter);
@@ -61,7 +59,7 @@ public unsafe class SoundSystem
   {
     foreach (var t in gameObjects)
     {
-      associateSoundToObjects(ref localPlayer, t);
+      AssociateSoundToObjects(ref localPlayer, t);
       SaveTracaks(localPlayer, mapId, t);
     }
   }
@@ -76,7 +74,7 @@ public unsafe class SoundSystem
     }
   }
 
-  private void associateSoundToObjects(ref Character localPlayer, Dalamud.Game.ClientState.Objects.Types.GameObject t)
+  private void AssociateSoundToObjects(ref Character localPlayer, Dalamud.Game.ClientState.Objects.Types.GameObject t)
   {
     if (t.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc && t.ObjectId != localPlayer.ObjectId)
     {
@@ -85,8 +83,7 @@ public unsafe class SoundSystem
       {
         if (!ObjChannels.TryGetValue(t.ObjectId, out var value))
         {
-          Channel channelNPC;
-          channelNPC = System.PlaySound(EnnemySound.Value, paused: false);
+          Channel channelNPC = System.PlaySound(EnnemySound.Value, paused: false);
           value = channelNPC!;
           ObjChannels[t.ObjectId] = value;
         }
@@ -125,32 +122,25 @@ public unsafe class SoundSystem
     }
     */
   }
-  public void updateFollowMe(Vector3 position, float min, float max)
+  public void UpdateFollowMe(Vector3 position, float min, float max)
   {
-    if (channelFollowMe == null)
+    if (ChannelFollowMe == null)
     {
-      channelFollowMe = System.PlaySound(FollowMeSound.Value, paused: true);
+      ChannelFollowMe = System.PlaySound(FollowMeSound.Value, paused: true);
     }
-    channelFollowMe!.Set3DAttributes(position, default, default);
-    channelFollowMe.Set3DMinMaxDistance(min, max);
+    ChannelFollowMe!.Set3DAttributes(position, default, default);
+    ChannelFollowMe.Set3DMinMaxDistance(min, max);
     FollowMePoint = position;
   }
-  public void setFollowMePlayingState(ref Vector3 characterPos)
+  public void SetFollowMePlayingState(ref Vector3 characterPos)
   {
-    if (channelFollowMe != null)
+    if (ChannelFollowMe != null)
     {
-      channelFollowMe.Get3DMinMaxDistance(out var min, out _);
-      if (Vector3.Distance(characterPos, FollowMePoint) <= min)
-      {
-        channelFollowMe.Paused = true;
-      }
-      else
-      {
-        channelFollowMe.Paused = false;
-      }
+      ChannelFollowMe.Get3DMinMaxDistance(out var min, out _);
+      ChannelFollowMe.Paused = Vector3.Distance(characterPos, FollowMePoint) <= min;
     }
   }
-  public void cleanObjChannel()
+  public void CleanObjChannel()
   {
     foreach (var t in ObjChannels.Values)
     {
@@ -158,40 +148,38 @@ public unsafe class SoundSystem
     }
     ObjChannels.Clear();
   }
-  public void togleFollowMe()
+  public void TogleFollowMe()
   {
-    if (channelFollowMe!.Volume > 0)
-      channelFollowMe.Volume = 0f;
-    else channelFollowMe.Volume = 1f;
+    if (ChannelFollowMe != null) ChannelFollowMe.Volume = ChannelFollowMe!.Volume > 0 ? 0f : 1f;
   }
-  public void GPSStart(List<Vector3> path, Vector3 playerPos)
+  public void GpsStart(List<Vector3> path, Vector3 playerPos)
   {
-    GPSState = true;
+    GpsState = true;
     GPSPath = path;
-    GPSPlayingIndex = 0;
-    channelShortFollowMe!.Set3DAttributes(path[GPSPlayingIndex], default, default);
-    channelShortFollowMe.Set3DMinMaxDistance(0, Vector3.Distance(path[GPSPlayingIndex], playerPos) * 2f);
-    channelShortFollowMe.Paused = false;
-    channelFollowMe!.Paused = true;
+    GpsPlayingIndex = 0;
+    ChannelShortFollowMe!.Set3DAttributes(path[GpsPlayingIndex], default, default);
+    ChannelShortFollowMe.Set3DMinMaxDistance(0, Vector3.Distance(path[GpsPlayingIndex], playerPos) * 2f);
+    ChannelShortFollowMe.Paused = false;
+    ChannelFollowMe!.Paused = true;
     ScreenReader.Output("c bon");
   }
-  public void GPSUpdate(Vector3 playerPos)
+  public void GpsUpdate(Vector3 playerPos)
   {
-    if (GPSState)
+    if (GpsState)
     {
-      if (Vector3.Distance(playerPos, GPSPath[GPSPlayingIndex]) <= 10)
+      if (Vector3.Distance(playerPos, GPSPath[GpsPlayingIndex]) <= 10)
       {
-        if (GPSPlayingIndex == GPSPath.Count - 1)
+        if (GpsPlayingIndex == GPSPath.Count - 1)
         {
-          GPSState = false;
-          channelFollowMe!.Paused = false;
+          GpsState = false;
+          ChannelFollowMe!.Paused = false;
           ScreenReader.Output("fini");
           return;
         }
-        GPSPlayingIndex++;
-        channelShortFollowMe!.Set3DAttributes(GPSPath[GPSPlayingIndex], default, default);
-        channelShortFollowMe.Set3DMinMaxDistance(0, Vector3.Distance(GPSPath[GPSPlayingIndex], playerPos) * 2f);
-        ScreenReader.Output(GPSPlayingIndex.ToString());
+        GpsPlayingIndex++;
+        ChannelShortFollowMe!.Set3DAttributes(GPSPath[GpsPlayingIndex], default, default);
+        ChannelShortFollowMe.Set3DMinMaxDistance(0, Vector3.Distance(GPSPath[GpsPlayingIndex], playerPos) * 2f);
+        ScreenReader.Output(GpsPlayingIndex.ToString());
       }
     }
   }
@@ -200,17 +188,17 @@ public unsafe class SoundSystem
   public uint DetourCreateBattleCharacter(ClientObjectManager* self, uint index = 4294967295, byte param = 0)
   {
     ScreenReader.Output("bwaaa");
-    return this._CreateBattleCharacterHook.Original(self, index, param);
+    return this._CreateBattleCharacterHook!.Original(self, index, param);
   }
   public void Update(bool isWindowFocused)
   {
     if (isWindowFocused)
     {
-      System.MasterChannelGroup.Paused = false;
+      if (System.MasterChannelGroup != null) System.MasterChannelGroup.Paused = false;
       System.Update();
     } else
     {
-      System.MasterChannelGroup.Paused = true;
+      if (System.MasterChannelGroup != null) System.MasterChannelGroup.Paused = true;
     }
   }
 }

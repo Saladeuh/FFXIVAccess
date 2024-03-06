@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Dalamud.ContextMenu;
 using Dalamud.Game.ClientState.Keys;
 using Dalamud.Game.ClientState.Objects;
@@ -16,7 +15,6 @@ using FFXIVClientStructs.FFXIV.Common.Math;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using Lumina.Excel.GeneratedSheets;
 using Dalamud.Plugin.Services;
-using FFXIVClientStructs.FFXIV.Client.Game;
 using Mappy;
 using Dalamud.Game.Command;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
@@ -32,33 +30,31 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
   public static string Name => "FFXIVAccess";
   public static string Version => "0.0.0";
   private static Lumina.Excel.ExcelSheet<CustomQuestSheet> QuestList;
-  private readonly Lumina.Excel.ExcelSheet<Lumina.Excel.GeneratedSheets.Item> itemList;
+  private readonly Lumina.Excel.ExcelSheet<Item> itemList;
   private DalamudPluginInterface PluginInterface { get; init; }
   private ICommandManager CommandManager { get; init; }
-  private IDataManager dataManager { get; init; }
-  public IAddonLifecycle addonLifeCycle { get; }
+  private IDataManager DataManager { get; init; }
+  public IAddonLifecycle AddonLifeCycle { get; }
   public IAddonEventManager AddonEventManager { get; }
-  public IFramework framework { get; set; }
-  private IFlyTextGui flyTextGui { get; init; }
-  public IKeyState keyState { get; private set; }
-  private IObjectTable gameObjects { get; init; }
-  private IGameInteropProvider gameInteropProvider { get; }
-  public IGameGui gameGui { get; private set; }
+  public IFramework Framework { get; set; }
+  private IFlyTextGui FlyTextGui { get; init; }
+  public IKeyState KeyState { get; private set; }
+  private IObjectTable GameObjects { get; init; }
+  public IGameGui GameGui { get; private set; }
 
 
-  public SeStringBuilder seStringBuilder { get; private set; }
-  private ITitleScreenMenu titleScreenMenu { get; set; }
-  public IClientState clientState { get; private set; }
-  private IToastGui toastGui { get; set; }
-  public ITargetManager targetManager;
+  public SeStringBuilder SeStringBuilder { get; }
+  private ITitleScreenMenu TitleScreenMenu { get; }
+  public IClientState ClientState { get; private set; }
+  private IToastGui ToastGui { get; }
+  public ITargetManager TargetManager;
   public Configuration Configuration { get; init; }
   public WindowSystem WindowSystem = new("SamplePlugin");
   [PluginService] public static IChatGui Chat { get; set; } = null!;
 
   private ConfigWindow ConfigWindow { get; init; }
-  public Dictionary<VirtualKey, Action<string, string>> keyActions { get; }
-  private MainWindow MainWindow { get; init; }
-  public SoundSystem soundSystem { get; private set; }
+  public Dictionary<VirtualKey, Action<string, string>> KeyActions { get; }
+  public SoundSystem SoundSystem { get; private set; }
 
   public event Action<nint, string> OnNewAddonOpenedEvent;
   public event Action<AtkResNode?> OnNodeFocusChangedEvent;
@@ -88,18 +84,17 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
     var mappyPlugin = new MappyPlugin(PluginInterface);
     var sf=new SightyFriendPlugin(PluginInterface, commandManager);
     CommandManager = commandManager;
-    this.titleScreenMenu = titleScreenMenu;
-    this.clientState = clientState;
-    this.dataManager = dataManager;
-    this.framework = framework;
-    this.gameObjects = gameObjects;
-    this.gameGui = gameGui;
-    this.gameInteropProvider = gameInteropProvider;
-    this.keyState = keyState;
-    this.targetManager = targetManager;
-    this.addonLifeCycle = addonLifeCycle;
+    this.TitleScreenMenu = titleScreenMenu;
+    this.ClientState = clientState;
+    this.DataManager = dataManager;
+    this.Framework = framework;
+    this.GameObjects = gameObjects;
+    this.GameGui = gameGui;
+    this.KeyState = keyState;
+    this.TargetManager = targetManager;
+    this.AddonLifeCycle = addonLifeCycle;
     AddonEventManager = addonEventManager;
-    this.toastGui = toastGui;
+    this.ToastGui = toastGui;
     Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
     Configuration.Initialize(PluginInterface);
     this._SetPositionHook = gameInteropProvider.HookFromAddress<SetPosition>(
@@ -108,7 +103,7 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
     this._SetPositionHook.Enable();
     
     //chat.ChatMessage += onChat;
-    itemList = dataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!;
+    itemList = dataManager.GetExcelSheet<Item>()!;
     QuestList = dataManager.GetExcelSheet<CustomQuestSheet>()!;
     var contextMenu = new DalamudContextMenu(this.PluginInterface);
     contextMenu.OnOpenGameObjectContextMenu += OpenGameObjectContextMenu;
@@ -125,9 +120,9 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
     toastGui.ErrorToast += onErrorToast;
     toastGui.QuestToast += onQuestToast;
     OnNewAddonOpenedEvent += onSelectString;
-    soundSystem = new SoundSystem(gameInteropProvider);
+    SoundSystem = new SoundSystem(gameInteropProvider);
     ConfigWindow = new ConfigWindow(this);
-    keyActions = new Dictionary<VirtualKey, Action<string, string>>()
+    KeyActions = new Dictionary<VirtualKey, Action<string, string>>()
     {
       { VirtualKey.A, OnCommand },
       { VirtualKey.Z, OnCommand  },
@@ -155,9 +150,6 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
     {
       HelpMessage = "A useful message to display in /xlhelp"
     });
-
-    PluginInterface.UiBuilder.Draw += DrawUI;
-    PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
   }
 
   private void OnPostSetup(AddonEvent type, AddonArgs args)
@@ -175,7 +167,7 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
     var text = "";
     var parentNode = ((AtkResNode*)node)->ParentNode;
     var nbchilds = parentNode->ChildCount;
-    var child = (AtkResNode*)parentNode->ChildNode;
+    var child = parentNode->ChildNode;
     for (var i = 0; i < nbchilds; i++)
     {
       if (child != null)
@@ -205,21 +197,15 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
 
   private void onTerritoryChanged(ushort e)
   {
-    ScreenReader.Output(soundSystem.ObjChannels.Count.ToString());
-    soundSystem.cleanObjChannel();
+    ScreenReader.Output(SoundSystem.ObjChannels.Count.ToString());
+    SoundSystem.CleanObjChannel();
   }
   private RaptureAtkModule* RaptureAtkModule => CSFramework.Instance()->GetUiModule()->GetRaptureAtkModule();
   private bool IsTextInputActive => RaptureAtkModule->AtkModule.IsTextInputActive();
 
-  public uint currentMapId
-  {
-    get
-    {
-      return AgentMap.Instance()->CurrentMapId;
-    }
-  }
+  public uint CurrentMapId => AgentMap.Instance()->CurrentMapId;
 
-  public float lastRotation { get; private set; }
+  public float LastRotation { get; private set; }
 
   private readonly nint focusedAddon = nint.Zero;
   private AtkResNode? _lastFocusedNode;
@@ -228,7 +214,7 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
   private bool _banging = false;
   private DateTime lastTime = DateTime.Now;
   private bool isHealed = true;
-  public unsafe void OnFrameworkUpdate(IFramework _)
+  public void OnFrameworkUpdate(IFramework _)
   {
     /*
     nint addonPtr = nint.Zero;
@@ -252,20 +238,20 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
     }
     _lastFocusedNode = *focusedNode;
     */
-    if (clientState.LocalPlayer != null)
+    if (ClientState.LocalPlayer != null)
     {
-      soundSystem.scanMapObject(gameObjects, this.clientState.LocalPlayer, currentMapId);
-      var rotation = this.clientState.LocalPlayer.Rotation;
-      if (rotation != lastRotation)
+      SoundSystem.scanMapObject(GameObjects, this.ClientState.LocalPlayer, CurrentMapId);
+      var rotation = this.ClientState.LocalPlayer.Rotation;
+      if (Math.Abs(rotation - LastRotation) > TOLERANCE)
       {
-        soundSystem.System.Set3DListenerAttributes(0, clientState.LocalPlayer.Position, default, Util.ConvertOrientationToVector(rotation), soundSystem.Up);
-        lastRotation = rotation;
+        SoundSystem.System.Set3DListenerAttributes(0, ClientState.LocalPlayer.Position, default, Util.ConvertOrientationToVector(rotation), SoundSystem.Up);
+        LastRotation = rotation;
       }
-      var position = clientState.LocalPlayer.Position;
+      var position = ClientState.LocalPlayer.Position;
       RaycastHit hit;
       var flags = stackalloc int[] { 0x4000, 0, 0x4000, 0 };
-      var orientation = Util.ConvertOrientationToVector(this.clientState.LocalPlayer.Rotation);
-      CSFramework.Instance()->BGCollisionModule->RaycastEx(&hit, clientState.LocalPlayer.Position + new System.Numerics.Vector3(0, 2f, 0), orientation, 10000, 1, flags);
+      var orientation = Util.ConvertOrientationToVector(this.ClientState.LocalPlayer.Rotation);
+      CSFramework.Instance()->BGCollisionModule->RaycastEx(&hit, ClientState.LocalPlayer.Position + new System.Numerics.Vector3(0, 2f, 0), orientation, 10000, 1, flags);
       if ((position == _lastPosition || Vector3.Distance(position, hit.Point) <= 0.2) && AgentMap.Instance()->IsPlayerMoving==1)
       {
         if (_banging)
@@ -290,7 +276,7 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
         _banging = false;
       }
       _lastPosition = position;
-      float percHP = (clientState.LocalPlayer.CurrentHp / clientState.LocalPlayer.MaxHp * 100);
+      float percHP = (ClientState.LocalPlayer.CurrentHp / ClientState.LocalPlayer.MaxHp * 100);
       if (percHP <= 50 && isHealed)
       {
         UIModule.PlayChatSoundEffect(11);
@@ -303,19 +289,19 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
     }
     if (!IsTextInputActive && !ImGuiNET.ImGui.GetIO().WantCaptureKeyboard)
     {
-      if (keyState[VirtualKey.CONTROL])
+      if (KeyState[VirtualKey.CONTROL])
       {
-        foreach (var kvp in keyActions)
+        foreach (var kvp in KeyActions)
         {
-          if (keyState[kvp.Key])
+          if (KeyState[kvp.Key])
           {
             kvp.Value("", "");
-            keyState[kvp.Key] = false;
+            KeyState[kvp.Key] = false;
           }
         }
       }
     }
-    soundSystem.Update(UIInputData.Instance()->IsGameWindowFocused);
+    SoundSystem.Update(UIInputData.Instance()->IsGameWindowFocused);
   }
   /*
   private void onChat(XivChatType type, uint senderId, ref SeString sender, ref SeString message, ref bool isHandled)
@@ -342,8 +328,8 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
       */
   public void Dispose()
   {
-    this.framework.Update -= OnFrameworkUpdate;
-    soundSystem.System.Release();
+    this.Framework.Update -= OnFrameworkUpdate;
+    SoundSystem.System.Release();
     //soundSystem.System.Dispose();
     ScreenReader.Unload();
     //WindowSystem.RemoveAllWindows();
@@ -353,16 +339,6 @@ public sealed unsafe partial class Plugin : IDalamudPlugin
     CommandManager.RemoveHandler("/find");
     CommandManager.RemoveHandler("/tfm");
     CommandManager.RemoveHandler("/currentmapquest");
-    addonLifeCycle.UnregisterListener(OnPostRefresh);
-  }
-
-  private void DrawUI()
-  {
-    WindowSystem.Draw();
-  }
-
-  public void DrawConfigUI()
-  {
-    ConfigWindow.IsOpen = true;
+    AddonLifeCycle.UnregisterListener(OnPostRefresh);
   }
 }
